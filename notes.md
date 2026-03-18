@@ -136,3 +136,42 @@ Frontend UI	React
 
 api://0c14d865-04b2-4427-9e4f-273649aee872
 api://f6b1eb6a-3323-4ac9-908a-98799bed15a1/access_as_user
+
+
+phase-1
+React app starts
+
+MSAL is created
+
+User clicks login
+
+Azure sign-in page opens
+
+User signs in
+
+Azure sends user back to your React app
+
+React knows user is logged in
+
+When you click “Call Protected FastAPI”, React asks Azure for an access token
+
+React sends that token to FastAPI in Authorization: Bearer <token>
+
+
+Frontend → sends token → FastAPI
+
+FastAPI:
+  ↓
+Extract token
+  ↓
+Verify signature (Azure public key)
+  ↓
+Check issuer (Azure tenant)
+  ↓
+Check audience (your API)
+  ↓
+Check expiry
+  ↓
+✅ Allow OR ❌ Reject
+
+https://redcap.deakin.edu.au/surveys/?s=9N8KP3P4P4AAMDPC
