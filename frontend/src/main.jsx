@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import App from "./App";
 import RedcapCompletePage from "./RedcapCompletePage";
 import { msalConfig } from "./authConfig";
+import EpisodePage from "./EpisodePage";
 
 const msalInstance = new PublicClientApplication(msalConfig);
 
@@ -34,6 +35,7 @@ msalInstance.initialize().then(async () => {
           <Routes>
             <Route path="/" element={<App />} />
             <Route path="/redcap-complete" element={<RedcapCompletePage />} />
+            <Route path="/episodes/:episodeNumber" element={<EpisodePage />} />
           </Routes>
         </BrowserRouter>
       </MsalProvider>

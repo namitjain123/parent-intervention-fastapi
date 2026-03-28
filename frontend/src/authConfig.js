@@ -11,6 +11,10 @@ export const msalConfig = {
     cacheLocation: "localStorage",
     storeAuthStateInCookie: false,
   },
+  system: {
+    iframeHashTimeout: 15000,
+    loadFrameTimeout: 15000,
+  },
 };
 
 export const loginRequest = {
