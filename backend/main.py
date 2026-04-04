@@ -14,8 +14,19 @@ from jose.exceptions import JWTError
 from sqlalchemy.orm import Session
 
 from database import Base, engine, get_db
-from models import User, Episode, UserEpisodeProgress
-from schemas import CompletePreQRequest, EpisodeCompleteRequest
+from models import (
+    User,
+    Episode,
+    UserEpisodeProgress,
+    UserQuizResponse,
+    UserEpisodeReaction,
+)
+from schemas import (
+    CompletePreQRequest,
+    EpisodeCompleteRequest,
+    QuizResponseRequest,
+    EpisodeReactionRequest,
+)
 from blob_service import upload_audio_file
 from utils.transcript_utils import extract_text_from_docx
 
@@ -28,7 +39,10 @@ TENANT_ID = os.getenv("TENANT_ID")
 CLIENT_ID = os.getenv("CLIENT_ID")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
-OPENID_CONFIG_URL = f"https://parentingplatform.ciamlogin.com/{TENANT_ID}/v2.0/.well-known/openid-configuration"
+OPENID_CONFIG_URL = (
+    f"https://parentingplatform.ciamlogin.com/"
+    f"{TENANT_ID}/v2.0/.well-known/openid-configuration"
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -40,11 +54,9 @@ app.add_middleware(
 
 Base.metadata.create_all(bind=engine)
 
-# local folder for transcript files if needed
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# serve uploaded local files
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 openid_config = requests.get(OPENID_CONFIG_URL).json()
@@ -90,7 +102,11 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
 def get_or_create_user(user_claims, db: Session):
     azure_id = user_claims.get("sub")
     name = user_claims.get("name", "User")
-    email = user_claims.get("preferred_username") or user_claims.get("email") or "unknown@example.com"
+    email = (
+        user_claims.get("preferred_username")
+        or user_claims.get("email")
+        or "unknown@example.com"
+    )
 
     db_user = db.query(User).filter(User.azure_id == azure_id).first()
 
@@ -100,6 +116,7 @@ def get_or_create_user(user_claims, db: Session):
             name=name,
             email=email,
             pre_questionnaire_completed=False,
+            post_questionnaire_completed=False,
             current_episode=0,
         )
         db.add(db_user)
@@ -123,6 +140,7 @@ def get_me(user=Depends(verify_token), db: Session = Depends(get_db)):
         "name": db_user.name,
         "email": db_user.email,
         "pre_questionnaire_completed": db_user.pre_questionnaire_completed,
+        "post_questionnaire_completed": db_user.post_questionnaire_completed,
         "current_episode": db_user.current_episode,
     }
 
@@ -149,25 +167,33 @@ def get_dashboard(user=Depends(verify_token), db: Session = Depends(get_db)):
         else:
             status = "locked"
 
-        episodes.append({
-            "episode_number": ep.episode_number,
-            "title": ep.title,
-            "description": ep.description,
-            "audio_url": ep.audio_url,
-            "status": status,
-        })
+        episodes.append(
+            {
+                "episode_number": ep.episode_number,
+                "title": ep.title,
+                "description": ep.description,
+                "audio_url": ep.audio_url,
+                "status": status,
+            }
+        )
+
+    all_episodes_completed = db_user.current_episode > 3
 
     return {
         "name": db_user.name,
         "email": db_user.email,
         "pre_questionnaire_completed": db_user.pre_questionnaire_completed,
+        "post_questionnaire_completed": db_user.post_questionnaire_completed,
         "current_episode": db_user.current_episode,
+        "all_episodes_completed": all_episodes_completed,
         "episodes": episodes,
     }
 
 
 @app.post("/mark-prequestionnaire-complete")
-def mark_prequestionnaire_complete(data: CompletePreQRequest, db: Session = Depends(get_db)):
+def mark_prequestionnaire_complete(
+    data: CompletePreQRequest, db: Session = Depends(get_db)
+):
     db_user = db.query(User).filter(User.azure_id == data.participant_id).first()
 
     if not db_user:
@@ -183,12 +209,33 @@ def mark_prequestionnaire_complete(data: CompletePreQRequest, db: Session = Depe
     return {"message": "Pre-questionnaire marked complete"}
 
 
+@app.post("/mark-postquestionnaire-complete")
+def mark_postquestionnaire_complete(
+    data: CompletePreQRequest, db: Session = Depends(get_db)
+):
+    db_user = db.query(User).filter(User.azure_id == data.participant_id).first()
+
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    db_user.post_questionnaire_completed = True
+    db.commit()
+
+    return {"message": "Post-questionnaire marked complete"}
+
+
 @app.get("/episodes/{episode_number}")
-def get_episode(episode_number: int, user=Depends(verify_token), db: Session = Depends(get_db)):
+def get_episode(
+    episode_number: int,
+    user=Depends(verify_token),
+    db: Session = Depends(get_db),
+):
     db_user = get_or_create_user(user, db)
 
     if not db_user.pre_questionnaire_completed:
-        raise HTTPException(status_code=403, detail="Complete pre-questionnaire first")
+        raise HTTPException(
+            status_code=403, detail="Complete pre-questionnaire first"
+        )
 
     if episode_number > db_user.current_episode:
         raise HTTPException(status_code=403, detail="Episode is locked")
@@ -211,16 +258,22 @@ def get_episode(episode_number: int, user=Depends(verify_token), db: Session = D
         "audio_url": episode.audio_url,
         "transcript_url": episode.transcript_url,
         "transcript_text": episode.transcript_text or "",
-        "quiz": quiz_data
+        "quiz": quiz_data,
     }
 
 
 @app.post("/episodes/{episode_number}/start")
-def start_episode(episode_number: int, user=Depends(verify_token), db: Session = Depends(get_db)):
+def start_episode(
+    episode_number: int,
+    user=Depends(verify_token),
+    db: Session = Depends(get_db),
+):
     db_user = get_or_create_user(user, db)
 
     if not db_user.pre_questionnaire_completed:
-        raise HTTPException(status_code=400, detail="Complete pre-questionnaire first")
+        raise HTTPException(
+            status_code=400, detail="Complete pre-questionnaire first"
+        )
 
     if episode_number > db_user.current_episode:
         raise HTTPException(status_code=400, detail="Episode is locked")
@@ -229,10 +282,14 @@ def start_episode(episode_number: int, user=Depends(verify_token), db: Session =
     if not episode:
         raise HTTPException(status_code=404, detail="Episode not found")
 
-    progress = db.query(UserEpisodeProgress).filter(
-        UserEpisodeProgress.user_id == db_user.id,
-        UserEpisodeProgress.episode_id == episode.id
-    ).first()
+    progress = (
+        db.query(UserEpisodeProgress)
+        .filter(
+            UserEpisodeProgress.user_id == db_user.id,
+            UserEpisodeProgress.episode_id == episode.id,
+        )
+        .first()
+    )
 
     if not progress:
         progress = UserEpisodeProgress(
@@ -240,7 +297,7 @@ def start_episode(episode_number: int, user=Depends(verify_token), db: Session =
             episode_id=episode.id,
             started_at=datetime.utcnow(),
             completed=False,
-            time_spent_seconds=0
+            time_spent_seconds=0,
         )
         db.add(progress)
     else:
@@ -257,12 +314,14 @@ def complete_episode(
     episode_number: int,
     data: EpisodeCompleteRequest,
     user=Depends(verify_token),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     db_user = get_or_create_user(user, db)
 
     if not db_user.pre_questionnaire_completed:
-        raise HTTPException(status_code=400, detail="Complete pre-questionnaire first")
+        raise HTTPException(
+            status_code=400, detail="Complete pre-questionnaire first"
+        )
 
     if episode_number != db_user.current_episode:
         raise HTTPException(status_code=400, detail="Episode is locked")
@@ -271,10 +330,14 @@ def complete_episode(
     if not episode:
         raise HTTPException(status_code=404, detail="Episode not found")
 
-    progress = db.query(UserEpisodeProgress).filter(
-        UserEpisodeProgress.user_id == db_user.id,
-        UserEpisodeProgress.episode_id == episode.id
-    ).first()
+    progress = (
+        db.query(UserEpisodeProgress)
+        .filter(
+            UserEpisodeProgress.user_id == db_user.id,
+            UserEpisodeProgress.episode_id == episode.id,
+        )
+        .first()
+    )
 
     if not progress:
         progress = UserEpisodeProgress(
@@ -283,7 +346,7 @@ def complete_episode(
             started_at=datetime.utcnow(),
             completed=True,
             completed_at=datetime.utcnow(),
-            time_spent_seconds=data.time_spent_seconds
+            time_spent_seconds=data.time_spent_seconds,
         )
         db.add(progress)
     else:
@@ -297,11 +360,89 @@ def complete_episode(
     return {"message": f"Episode {episode_number} completed successfully"}
 
 
+@app.post("/episodes/{episode_number}/quiz-response")
+def save_quiz_response(
+    episode_number: int,
+    data: QuizResponseRequest,
+    user=Depends(verify_token),
+    db: Session = Depends(get_db),
+):
+    db_user = get_or_create_user(user, db)
+
+    if not db_user.pre_questionnaire_completed:
+        raise HTTPException(
+            status_code=400, detail="Complete pre-questionnaire first"
+        )
+
+    if episode_number > db_user.current_episode:
+        raise HTTPException(status_code=400, detail="Episode is locked")
+
+    episode = db.query(Episode).filter(Episode.episode_number == episode_number).first()
+    if not episode:
+        raise HTTPException(status_code=404, detail="Episode not found")
+
+    quiz_response = UserQuizResponse(
+        user_id=db_user.id,
+        episode_id=episode.id,
+        question_text=data.question_text,
+        response_text=data.response_text,
+        skipped=data.skipped,
+    )
+
+    db.add(quiz_response)
+    db.commit()
+    db.refresh(quiz_response)
+
+    return {
+        "message": "Quiz response saved successfully",
+        "response_id": quiz_response.id,
+    }
+
+
+@app.post("/episodes/{episode_number}/reaction")
+def save_episode_reaction(
+    episode_number: int,
+    data: EpisodeReactionRequest,
+    user=Depends(verify_token),
+    db: Session = Depends(get_db),
+):
+    db_user = get_or_create_user(user, db)
+
+    if not db_user.pre_questionnaire_completed:
+        raise HTTPException(
+            status_code=400, detail="Complete pre-questionnaire first"
+        )
+
+    if episode_number > db_user.current_episode:
+        raise HTTPException(status_code=400, detail="Episode is locked")
+
+    episode = db.query(Episode).filter(Episode.episode_number == episode_number).first()
+    if not episode:
+        raise HTTPException(status_code=404, detail="Episode not found")
+
+    reaction = UserEpisodeReaction(
+        user_id=db_user.id,
+        episode_id=episode.id,
+        emoji=data.emoji,
+        audio_timestamp_seconds=data.audio_timestamp_seconds,
+    )
+
+    db.add(reaction)
+    db.commit()
+    db.refresh(reaction)
+
+    return {
+        "message": "Reaction saved successfully",
+        "reaction_id": reaction.id,
+        "audio_timestamp_seconds": reaction.audio_timestamp_seconds,
+    }
+
+
 @app.post("/upload-transcript/{episode_number}")
 def upload_transcript(
     episode_number: int,
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     episode = db.query(Episode).filter(Episode.episode_number == episode_number).first()
     if not episode:
@@ -320,16 +461,21 @@ def upload_transcript(
         with open(temp_path, "r", encoding="utf-8") as f:
             transcript_text = f.read()
     else:
-        raise HTTPException(status_code=400, detail="Only .docx or .txt transcript files are supported")
+        raise HTTPException(
+            status_code=400,
+            detail="Only .docx or .txt transcript files are supported",
+        )
 
     episode.transcript_text = transcript_text
-    episode.transcript_url = f"http://127.0.0.1:8000/uploads/{os.path.basename(temp_path)}"
+    episode.transcript_url = (
+        f"http://127.0.0.1:8000/uploads/{os.path.basename(temp_path)}"
+    )
 
     db.commit()
 
     return {
         "message": "Transcript uploaded and processed",
-        "transcript_url": episode.transcript_url
+        "transcript_url": episode.transcript_url,
     }
 
 
@@ -343,7 +489,6 @@ def upload_episode(
     transcript_file: UploadFile = File(None),
     db: Session = Depends(get_db),
 ):
-    # validate quiz json
     try:
         parsed_quiz = json.loads(quiz_json)
         if not isinstance(parsed_quiz, list):
@@ -351,14 +496,12 @@ def upload_episode(
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid quiz_json format")
 
-    # upload audio to blob
     filename = f"episode_{episode_number}_{audio_file.filename}"
     audio_url = upload_audio_file(audio_file.file, filename)
 
     transcript_url = None
     transcript_text = None
 
-    # save transcript locally and extract text
     if transcript_file:
         transcript_filename = f"episode_{episode_number}_{transcript_file.filename}"
         transcript_path = os.path.join(UPLOAD_DIR, transcript_filename)
@@ -374,7 +517,10 @@ def upload_episode(
             with open(transcript_path, "r", encoding="utf-8") as f:
                 transcript_text = f.read()
         else:
-            raise HTTPException(status_code=400, detail="Only .docx or .txt transcript files are supported")
+            raise HTTPException(
+                status_code=400,
+                detail="Only .docx or .txt transcript files are supported",
+            )
 
     existing = db.query(Episode).filter(Episode.episode_number == episode_number).first()
 
@@ -405,5 +551,5 @@ def upload_episode(
         "message": "Episode uploaded successfully",
         "audio_url": audio_url,
         "transcript_url": transcript_url,
-        "quiz_count": len(parsed_quiz)
+        "quiz_count": len(parsed_quiz),
     }

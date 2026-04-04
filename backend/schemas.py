@@ -47,3 +47,12 @@ class CompletePreQRequest(BaseModel):
 
 class EpisodeCompleteRequest(BaseModel):
     time_spent_seconds: int
+
+class QuizResponseRequest(BaseModel):
+    question_text: Optional[str] = None
+    response_text: Optional[str] = None
+    skipped: bool = False
+
+class EpisodeReactionRequest(BaseModel):
+    emoji: str
+    audio_timestamp_seconds: int

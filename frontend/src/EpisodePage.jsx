@@ -11,18 +11,28 @@ export default function EpisodePage() {
 
   const [episode, setEpisode] = useState(null);
   const [showTranscript, setShowTranscript] = useState(false);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [showExplanation, setShowExplanation] = useState(false);
+
+  const [quizAnswer, setQuizAnswer] = useState("");
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [savingQuiz, setSavingQuiz] = useState(false);
+
+  const [savingReaction, setSavingReaction] = useState(false);
 
   const startedAtRef = useRef(null);
+  const audioRef = useRef(null);
 
   const getApiToken = async () => {
     const account = instance.getActiveAccount() || accounts[0];
+
+    if (!account) {
+      throw new Error("No active account found");
+    }
+
     const response = await instance.acquireTokenSilent({
       ...apiRequest,
       account,
     });
+
     return response.accessToken;
   };
 
@@ -30,9 +40,12 @@ export default function EpisodePage() {
     try {
       const token = await getApiToken();
 
-      const res = await axios.get(`http://127.0.0.1:8000/episodes/${episodeNumber}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(
+        `http://127.0.0.1:8000/episodes/${episodeNumber}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       setEpisode(res.data);
 
@@ -44,7 +57,57 @@ export default function EpisodePage() {
 
       startedAtRef.current = Date.now();
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load episode:", err);
+    }
+  };
+
+  const submitQuizResponse = async (skipped = false) => {
+    try {
+      setSavingQuiz(true);
+      const token = await getApiToken();
+
+      await axios.post(
+        `http://127.0.0.1:8000/episodes/${episodeNumber}/quiz-response`,
+        {
+          question_text: currentQuestion?.question || null,
+          response_text: skipped ? null : quizAnswer,
+          skipped: skipped,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setQuizSubmitted(true);
+    } catch (err) {
+      console.error("Failed to save quiz response:", err);
+    } finally {
+      setSavingQuiz(false);
+    }
+  };
+
+  const submitReaction = async (emoji) => {
+    try {
+      const audio = audioRef.current;
+      const currentTime = audio ? Math.floor(audio.currentTime) : 0;
+
+      setSavingReaction(true);
+      const token = await getApiToken();
+
+      await axios.post(
+        `http://127.0.0.1:8000/episodes/${episodeNumber}/reaction`,
+        {
+          emoji,
+          audio_timestamp_seconds: currentTime,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+    } catch (err) {
+      console.error("Failed to save reaction:", err);
+    } finally {
+      setSavingReaction(false);
     }
   };
 
@@ -63,7 +126,7 @@ export default function EpisodePage() {
 
       navigate("/");
     } catch (err) {
-      console.error(err);
+      console.error("Failed to complete episode:", err);
     }
   };
 
@@ -71,147 +134,495 @@ export default function EpisodePage() {
     loadEpisode();
   }, [episodeNumber]);
 
-  const handleAnswerClick = (optionIndex) => {
-    setSelectedAnswer(optionIndex);
-    setShowExplanation(true);
-  };
+  if (!episode) {
+    return (
+      <div style={styles.loadingPage}>
+        <div style={styles.loadingCard}>Loading episode...</div>
+      </div>
+    );
+  }
 
-  const handleNextQuestion = () => {
-    setSelectedAnswer(null);
-    setShowExplanation(false);
-    setCurrentQuestionIndex((prev) => prev + 1);
-  };
-
-  if (!episode) return <div style={{ padding: 40 }}>Loading episode...</div>;
-
-  const currentQuestion = episode.quiz?.[currentQuestionIndex];
-  const isLastQuestion = currentQuestionIndex === (episode.quiz?.length || 0) - 1;
+  const currentQuestion = episode.quiz?.[0];
 
   return (
-    <div style={{ padding: 40, fontFamily: "Arial", maxWidth: "1100px", margin: "0 auto" }}>
-      <h1>{episode.title}</h1>
-      <p style={{ color: "#555", marginBottom: "20px" }}>{episode.description}</p>
+    <div style={styles.page}>
+      <div style={styles.container}>
+        <div style={styles.topBar}>
+          <button style={styles.backButton} onClick={() => navigate("/")}>
+            ← Back to Dashboard
+          </button>
 
-      <div style={{ display: "flex", gap: "20px", alignItems: "flex-start" }}>
-        {showTranscript && (
-          <div
-            style={{
-              flex: 1,
-              border: "1px solid #ddd",
-              borderRadius: "12px",
-              padding: "20px",
-              backgroundColor: "#f9f9f9",
-              maxHeight: "500px",
-              overflowY: "auto",
-              whiteSpace: "pre-wrap",
-            }}
-          >
-            <h3>Transcript</h3>
-            <p>{episode.transcript_text || "No transcript available."}</p>
+          <div style={styles.progressBadge}>Episode {episodeNumber}</div>
+        </div>
+
+        <div style={styles.headerCard}>
+          <div style={styles.headerText}>
+            <div style={styles.tag}>Weekly learning episode</div>
+            <h1 style={styles.title}>{episode.title}</h1>
+            <p style={styles.description}>{episode.description}</p>
           </div>
-        )}
+        </div>
 
-        <div style={{ flex: 2 }}>
-          <div
-            style={{
-              border: "1px solid #ddd",
-              borderRadius: "12px",
-              padding: "20px",
-              backgroundColor: "#fafafa",
-              marginBottom: "20px",
-            }}
-          >
-            <h3>Listen to this episode</h3>
-            <audio controls style={{ width: "100%", marginTop: "10px" }}>
-              <source src={episode.audio_url} type="audio/mpeg" />
-              Your browser does not support the audio element.
-            </audio>
-
-            <button
-              onClick={() => setShowTranscript(!showTranscript)}
-              style={{ marginTop: "15px" }}
-            >
-              {showTranscript ? "Hide Transcript" : "Show Transcript"}
-            </button>
-          </div>
-
-          {currentQuestion && (
-            <div
-              style={{
-                border: "1px solid #ddd",
-                borderRadius: "12px",
-                padding: "20px",
-                backgroundColor: "#fff",
-                marginBottom: "20px",
-              }}
-            >
-              <h3>
-                Quiz Question {currentQuestionIndex + 1} of {episode.quiz.length}
-              </h3>
-              <p style={{ fontWeight: "bold" }}>{currentQuestion.question}</p>
-
-              <div style={{ marginTop: "15px" }}>
-                {currentQuestion.options.map((option, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleAnswerClick(index)}
-                    disabled={showExplanation}
-                    style={{
-                      display: "block",
-                      width: "100%",
-                      textAlign: "left",
-                      padding: "12px",
-                      marginBottom: "10px",
-                      borderRadius: "8px",
-                      border: "1px solid #ccc",
-                      backgroundColor:
-                        selectedAnswer === index ? "#e6f2ff" : "#fff",
-                      cursor: showExplanation ? "default" : "pointer",
-                    }}
-                  >
-                    {option}
-                  </button>
-                ))}
+        <div
+          style={{
+            ...styles.layout,
+            gridTemplateColumns: showTranscript ? "0.95fr 1.4fr" : "1fr",
+          }}
+        >
+          {showTranscript && (
+            <div style={styles.transcriptPanel}>
+              <div style={styles.transcriptHeader}>
+                <h3 style={styles.transcriptTitle}>Transcript</h3>
+                <p style={styles.transcriptSub}>
+                  Read along while listening to the episode.
+                </p>
               </div>
 
-              {showExplanation && (
-                <div
-                  style={{
-                    marginTop: "20px",
-                    padding: "15px",
-                    borderRadius: "8px",
-                    backgroundColor: "#f3f8f3",
-                    border: "1px solid #cde5cd",
-                  }}
-                >
-                  <p>
-                    <strong>
-                      {selectedAnswer === currentQuestion.correct_answer
-                        ? "Correct!"
-                        : "Incorrect."}
-                    </strong>
-                  </p>
-                  <p>{currentQuestion.explanation}</p>
-
-                  {!isLastQuestion ? (
-                    <button onClick={handleNextQuestion} style={{ marginTop: "10px" }}>
-                      Next
-                    </button>
-                  ) : (
-                    <button onClick={markComplete} style={{ marginTop: "10px" }}>
-                      Finish Episode
-                    </button>
-                  )}
-                </div>
-              )}
+              <div style={styles.transcriptBody}>
+                {episode.transcript_text || "No transcript available."}
+              </div>
             </div>
           )}
 
-          <button onClick={() => navigate("/")} style={{ marginRight: 10 }}>
-            Back to Dashboard
-          </button>
+          <div style={styles.mainColumn}>
+            <div style={styles.audioCard}>
+              <div style={styles.sectionHeader}>
+                <div>
+                  <h2 style={styles.sectionTitle}>Listen to this episode</h2>
+                  <p style={styles.sectionSub}>
+                    Play the audio below and continue at your own pace.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setShowTranscript(!showTranscript)}
+                  style={styles.secondaryButton}
+                >
+                  {showTranscript ? "Hide Transcript" : "Show Transcript"}
+                </button>
+              </div>
+
+              <div style={styles.audioWrapper}>
+                <audio ref={audioRef} controls style={styles.audioPlayer}>
+                  <source src={episode.audio_url} type="audio/mpeg" />
+                  Your browser does not support the audio element.
+                </audio>
+              </div>
+
+              <div style={styles.reactionCard}>
+                <p style={styles.reactionTitle}>
+                  React at any moment while listening
+                </p>
+
+                <div style={styles.reactionRow}>
+                  {["😊", "😐", "😢", "👍", "❤️"].map((emoji) => (
+                    <button
+                      key={emoji}
+                      onClick={() => submitReaction(emoji)}
+                      disabled={savingReaction}
+                      style={styles.emojiButton}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+
+                <p style={styles.reactionHint}>
+                  Tap an emoji at any point in the audio. Each reaction is saved
+                  with that exact time.
+                </p>
+              </div>
+            </div>
+
+            {currentQuestion && (
+              <div style={styles.quizCard}>
+                <div style={styles.quizTop}>
+                  <div style={styles.quizBadge}>Optional Reflection</div>
+                </div>
+
+                <h3 style={styles.questionText}>{currentQuestion.question}</h3>
+
+                {!quizSubmitted ? (
+                  <>
+                    <textarea
+                      value={quizAnswer}
+                      onChange={(e) => setQuizAnswer(e.target.value)}
+                      placeholder="Type your response here..."
+                      style={styles.textArea}
+                    />
+
+                    <div style={styles.quizActionRow}>
+                      <button
+                        onClick={() => submitQuizResponse(false)}
+                        style={styles.primaryButton}
+                        disabled={!quizAnswer.trim() || savingQuiz}
+                      >
+                        {savingQuiz ? "Saving..." : "Save Response"}
+                      </button>
+
+                      <button
+                        onClick={() => submitQuizResponse(true)}
+                        style={styles.secondaryFinishButton}
+                        disabled={savingQuiz}
+                      >
+                        Skip
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div style={styles.explanationBox}>
+                    <p style={styles.explanationHeading}>Response saved</p>
+                    <p style={styles.explanationText}>
+                      Thank you. Your response has been recorded.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!currentQuestion && (
+              <div style={styles.quizCard}>
+                <div style={styles.quizTop}>
+                  <div style={styles.quizBadge}>No Reflection Question</div>
+                </div>
+
+                <p style={styles.explanationText}>
+                  This episode does not have a reflection question. You can
+                  finish the episode whenever you are ready.
+                </p>
+              </div>
+            )}
+
+            <div style={styles.finishCard}>
+              <h3 style={styles.finishTitle}>Finish this episode</h3>
+              <p style={styles.finishText}>
+                When you are ready, save your progress and return to the
+                dashboard.
+              </p>
+
+              <button onClick={markComplete} style={styles.primaryButton}>
+                Finish Episode
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
+const styles = {
+  page: {
+    minHeight: "100vh",
+    background: "linear-gradient(180deg, #eef5fb 0%, #f8fbfd 100%)",
+    fontFamily: "Arial, Helvetica, sans-serif",
+    padding: "28px",
+  },
+  container: {
+    maxWidth: "1240px",
+    margin: "0 auto",
+  },
+  loadingPage: {
+    minHeight: "100vh",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "linear-gradient(180deg, #eef5fb 0%, #f8fbfd 100%)",
+    fontFamily: "Arial, Helvetica, sans-serif",
+    padding: "24px",
+  },
+  loadingCard: {
+    background: "#fff",
+    border: "1px solid #e4edf5",
+    borderRadius: "18px",
+    padding: "24px 28px",
+    boxShadow: "0 12px 32px rgba(31, 41, 55, 0.08)",
+    fontSize: "16px",
+    color: "#334155",
+  },
+  topBar: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: "12px",
+    flexWrap: "wrap",
+    marginBottom: "20px",
+  },
+  backButton: {
+    background: "#ffffff",
+    border: "1px solid #d7e3ee",
+    borderRadius: "12px",
+    padding: "10px 16px",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: "600",
+    color: "#334155",
+  },
+  progressBadge: {
+    background: "#ffffff",
+    border: "1px solid #d7e3ee",
+    borderRadius: "999px",
+    padding: "10px 14px",
+    fontSize: "13px",
+    fontWeight: "700",
+    color: "#2858a6",
+  },
+  headerCard: {
+    background:
+      "radial-gradient(circle at top left, rgba(95,184,143,0.15), transparent 28%), linear-gradient(180deg, #f6fbff 0%, #eef6fb 100%)",
+    border: "1px solid #e4eef6",
+    borderRadius: "28px",
+    padding: "32px",
+    boxShadow: "0 12px 32px rgba(31, 41, 55, 0.06)",
+    marginBottom: "24px",
+  },
+  headerText: {
+    maxWidth: "850px",
+  },
+  tag: {
+    display: "inline-block",
+    background: "#ffffff",
+    border: "1px solid #d8e6f2",
+    borderRadius: "999px",
+    padding: "8px 14px",
+    fontSize: "13px",
+    fontWeight: "700",
+    color: "#2858a6",
+    marginBottom: "18px",
+  },
+  title: {
+    fontSize: "40px",
+    lineHeight: "1.15",
+    margin: "0 0 12px 0",
+    color: "#0f172a",
+  },
+  description: {
+    fontSize: "17px",
+    lineHeight: "1.7",
+    color: "#64748b",
+    margin: 0,
+  },
+  layout: {
+    display: "grid",
+    gap: "24px",
+    alignItems: "start",
+  },
+  mainColumn: {
+    display: "grid",
+    gap: "20px",
+  },
+  audioCard: {
+    background: "#ffffff",
+    border: "1px solid #e3ecf4",
+    borderRadius: "24px",
+    padding: "24px",
+    boxShadow: "0 12px 32px rgba(31, 41, 55, 0.05)",
+  },
+  sectionHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: "16px",
+    flexWrap: "wrap",
+    marginBottom: "18px",
+  },
+  sectionTitle: {
+    margin: "0 0 6px 0",
+    fontSize: "24px",
+    color: "#0f172a",
+  },
+  sectionSub: {
+    margin: 0,
+    fontSize: "14px",
+    color: "#64748b",
+    lineHeight: "1.5",
+  },
+  secondaryButton: {
+    background: "#ffffff",
+    border: "1px solid #d7e3ee",
+    borderRadius: "12px",
+    padding: "10px 14px",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: "600",
+    color: "#334155",
+  },
+  audioWrapper: {
+    background: "#f8fbfe",
+    border: "1px solid #dce9f5",
+    borderRadius: "18px",
+    padding: "16px",
+  },
+  audioPlayer: {
+    width: "100%",
+  },
+  reactionCard: {
+    marginTop: "16px",
+    background: "#f8fbfe",
+    border: "1px solid #dce9f5",
+    borderRadius: "18px",
+    padding: "16px",
+  },
+  reactionTitle: {
+    margin: "0 0 12px 0",
+    fontSize: "15px",
+    fontWeight: "700",
+    color: "#0f172a",
+  },
+  reactionRow: {
+    display: "flex",
+    gap: "10px",
+    flexWrap: "wrap",
+  },
+  emojiButton: {
+    fontSize: "24px",
+    background: "#ffffff",
+    border: "1px solid #d7e3ee",
+    borderRadius: "12px",
+    padding: "10px 14px",
+    cursor: "pointer",
+  },
+  reactionHint: {
+    marginTop: "12px",
+    marginBottom: 0,
+    fontSize: "13px",
+    color: "#64748b",
+    lineHeight: "1.5",
+  },
+  quizCard: {
+    background: "#ffffff",
+    border: "1px solid #e3ecf4",
+    borderRadius: "24px",
+    padding: "24px",
+    boxShadow: "0 12px 32px rgba(31, 41, 55, 0.05)",
+  },
+  quizTop: {
+    marginBottom: "16px",
+  },
+  quizBadge: {
+    display: "inline-block",
+    background: "#eef4ff",
+    border: "1px solid #d6e3ff",
+    color: "#2858a6",
+    borderRadius: "999px",
+    padding: "8px 12px",
+    fontSize: "13px",
+    fontWeight: "700",
+  },
+  questionText: {
+    margin: "0 0 18px 0",
+    fontSize: "22px",
+    lineHeight: "1.45",
+    color: "#0f172a",
+  },
+  textArea: {
+    width: "100%",
+    minHeight: "120px",
+    padding: "14px",
+    borderRadius: "14px",
+    border: "1px solid #d8e3ed",
+    fontSize: "15px",
+    color: "#1f2937",
+    resize: "vertical",
+    outline: "none",
+    boxSizing: "border-box",
+  },
+  explanationBox: {
+    marginTop: "20px",
+    padding: "18px",
+    borderRadius: "16px",
+    backgroundColor: "#f8fbfe",
+    border: "1px solid #dce9f5",
+  },
+  explanationHeading: {
+    margin: "0 0 8px 0",
+    fontSize: "16px",
+    fontWeight: "700",
+    color: "#0f172a",
+  },
+  explanationText: {
+    margin: "0 0 16px 0",
+    fontSize: "14px",
+    lineHeight: "1.6",
+    color: "#64748b",
+  },
+  quizActionRow: {
+    display: "flex",
+    gap: "12px",
+    marginTop: "20px",
+    flexWrap: "wrap",
+  },
+  finishCard: {
+    background: "#ffffff",
+    border: "1px solid #e3ecf4",
+    borderRadius: "24px",
+    padding: "24px",
+    boxShadow: "0 12px 32px rgba(31, 41, 55, 0.05)",
+  },
+  finishTitle: {
+    margin: "0 0 8px 0",
+    fontSize: "20px",
+    color: "#0f172a",
+  },
+  finishText: {
+    margin: "0 0 18px 0",
+    fontSize: "14px",
+    lineHeight: "1.6",
+    color: "#64748b",
+  },
+  primaryButton: {
+    background: "#356dcb",
+    color: "#ffffff",
+    border: "none",
+    borderRadius: "14px",
+    padding: "13px 18px",
+    fontSize: "15px",
+    fontWeight: "700",
+    cursor: "pointer",
+    boxShadow: "0 10px 22px rgba(53,109,203,0.22)",
+  },
+  secondaryFinishButton: {
+    background: "#ffffff",
+    color: "#334155",
+    border: "1px solid #d7e3ee",
+    borderRadius: "14px",
+    padding: "13px 18px",
+    fontSize: "15px",
+    fontWeight: "700",
+    cursor: "pointer",
+  },
+  transcriptPanel: {
+    background: "#ffffff",
+    border: "1px solid #e3ecf4",
+    borderRadius: "24px",
+    padding: "24px",
+    boxShadow: "0 12px 32px rgba(31, 41, 55, 0.05)",
+    position: "sticky",
+    top: "24px",
+    maxHeight: "75vh",
+    overflow: "hidden",
+  },
+  transcriptHeader: {
+    marginBottom: "14px",
+  },
+  transcriptTitle: {
+    margin: "0 0 6px 0",
+    fontSize: "22px",
+    color: "#0f172a",
+  },
+  transcriptSub: {
+    margin: 0,
+    fontSize: "14px",
+    color: "#64748b",
+    lineHeight: "1.5",
+  },
+  transcriptBody: {
+    maxHeight: "58vh",
+    overflowY: "auto",
+    whiteSpace: "pre-wrap",
+    lineHeight: "1.7",
+    fontSize: "15px",
+    color: "#334155",
+    paddingRight: "6px",
+  },
+};

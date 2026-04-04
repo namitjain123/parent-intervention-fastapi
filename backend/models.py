@@ -12,6 +12,7 @@ class User(Base):
     name = Column(String, nullable=False)
     email = Column(String, nullable=False)
     pre_questionnaire_completed = Column(Boolean, default=False)
+    post_questionnaire_completed = Column(Boolean, default=False)
     current_episode = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -49,3 +50,28 @@ class UserEpisodeProgress(Base):
 
     user = relationship("User", back_populates="progress")
     episode = relationship("Episode", back_populates="progress")
+
+
+class UserQuizResponse(Base):
+    __tablename__ = "user_quiz_responses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    episode_id = Column(Integer, ForeignKey("episodes.id"), nullable=False)
+
+    question_text = Column(Text, nullable=True)
+    response_text = Column(Text, nullable=True)
+    skipped = Column(Boolean, default=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class UserEpisodeReaction(Base):
+    __tablename__ = "user_episode_reactions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    episode_id = Column(Integer, ForeignKey("episodes.id"), nullable=False)
+
+    emoji = Column(String, nullable=False)
+    audio_timestamp_seconds = Column(Integer, nullable=False)   # new
+    created_at = Column(DateTime, default=datetime.utcnow)
