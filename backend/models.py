@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, Text
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from database import Base
 
 
@@ -14,7 +14,10 @@ class User(Base):
     pre_questionnaire_completed = Column(Boolean, default=False)
     post_questionnaire_completed = Column(Boolean, default=False)
     current_episode = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    last_activity_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    last_reminder_sent_at = Column(DateTime, nullable=True)
+    reminder_count = Column(Integer, default=0)
 
     progress = relationship("UserEpisodeProgress", back_populates="user")
 
@@ -31,7 +34,7 @@ class Episode(Base):
     transcript_text = Column(Text, nullable=True)
     quiz_json = Column(Text, nullable=True)
     is_published = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     progress = relationship("UserEpisodeProgress", back_populates="episode")
 
@@ -63,7 +66,7 @@ class UserQuizResponse(Base):
     response_text = Column(Text, nullable=True)
     skipped = Column(Boolean, default=False)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 class UserEpisodeReaction(Base):
     __tablename__ = "user_episode_reactions"
@@ -74,4 +77,4 @@ class UserEpisodeReaction(Base):
 
     emoji = Column(String, nullable=False)
     audio_timestamp_seconds = Column(Integer, nullable=False)   # new
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

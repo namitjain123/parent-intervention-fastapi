@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from jose import jwt
 from jose.exceptions import JWTError
 from sqlalchemy.orm import Session
-
+from utils.activity import update_user_activity
 from database import Base, engine, get_db
 from models import (
     User,
@@ -134,6 +134,7 @@ def test():
 @app.get("/me")
 def get_me(user=Depends(verify_token), db: Session = Depends(get_db)):
     db_user = get_or_create_user(user, db)
+    update_user_activity(db_user, db)
     return {
         "id": db_user.id,
         "azure_id": db_user.azure_id,
