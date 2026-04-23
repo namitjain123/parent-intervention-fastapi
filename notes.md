@@ -175,3 +175,7 @@ Check expiry
 ✅ Allow OR ❌ Reject
 
 https://redcap.deakin.edu.au/surveys/?s=9N8KP3P4P4AAMDPC
+
+
+ venv\Scripts\activate    
+  uvicorn main:app --reload

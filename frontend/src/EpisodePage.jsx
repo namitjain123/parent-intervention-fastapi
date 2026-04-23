@@ -4,6 +4,17 @@ import { useMsal } from "@azure/msal-react";
 import axios from "axios";
 import { apiRequest } from "./authConfig";
 
+const episodeImages = {
+  1: "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=1400&q=80",
+  2: "https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=1400&q=80",
+  3: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1400&q=80",
+  4: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1400&q=80",
+  5: "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1400&q=80",
+  6: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1400&q=80",
+  7: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1400&q=80",
+  8: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1400&q=80",
+};
+
 export default function EpisodePage() {
   const { episodeNumber } = useParams();
   const navigate = useNavigate();
@@ -17,9 +28,11 @@ export default function EpisodePage() {
   const [savingQuiz, setSavingQuiz] = useState(false);
 
   const [savingReaction, setSavingReaction] = useState(false);
+  const [reactionPopup, setReactionPopup] = useState(null);
 
   const startedAtRef = useRef(null);
   const audioRef = useRef(null);
+  const popupTimerRef = useRef(null);
 
   const getApiToken = async () => {
     const account = instance.getActiveAccount() || accounts[0];
@@ -86,10 +99,30 @@ export default function EpisodePage() {
     }
   };
 
+  const showReactionPopup = (emoji, currentTime) => {
+    if (popupTimerRef.current) {
+      clearTimeout(popupTimerRef.current);
+    }
+
+    const minutes = Math.floor(currentTime / 60);
+    const seconds = String(currentTime % 60).padStart(2, "0");
+
+    setReactionPopup({
+      emoji,
+     
+    });
+
+    popupTimerRef.current = setTimeout(() => {
+      setReactionPopup(null);
+    }, 1800);
+  };
+
   const submitReaction = async (emoji) => {
     try {
       const audio = audioRef.current;
       const currentTime = audio ? Math.floor(audio.currentTime) : 0;
+
+      showReactionPopup(emoji, currentTime);
 
       setSavingReaction(true);
       const token = await getApiToken();
@@ -134,6 +167,14 @@ export default function EpisodePage() {
     loadEpisode();
   }, [episodeNumber]);
 
+  useEffect(() => {
+    return () => {
+      if (popupTimerRef.current) {
+        clearTimeout(popupTimerRef.current);
+      }
+    };
+  }, []);
+
   if (!episode) {
     return (
       <div style={styles.loadingPage}>
@@ -143,6 +184,8 @@ export default function EpisodePage() {
   }
 
   const currentQuestion = episode.quiz?.[0];
+  const headerImage =
+    episode.image_url || episodeImages[Number(episodeNumber)] || episodeImages[2];
 
   return (
     <div style={styles.page}>
@@ -156,10 +199,21 @@ export default function EpisodePage() {
         </div>
 
         <div style={styles.headerCard}>
+          <div style={styles.headerImageArea}>
+            <img
+              src={headerImage}
+              alt={`Episode ${episodeNumber}`}
+              style={styles.headerImage}
+            />
+            <div style={styles.headerImageFade}></div>
+          </div>
+
           <div style={styles.headerText}>
             <div style={styles.tag}>Weekly learning episode</div>
             <h1 style={styles.title}>{episode.title}</h1>
-            <p style={styles.description}>{episode.description}</p>
+            {episode.description ? (
+              <p style={styles.description}>{episode.description}</p>
+            ) : null}
           </div>
         </div>
 
@@ -214,6 +268,17 @@ export default function EpisodePage() {
                   React at any moment while listening
                 </p>
 
+                <div style={styles.reactionPopupArea}>
+                  {reactionPopup && (
+                    <div style={styles.reactionPopup}>
+                      <span style={styles.reactionPopupEmoji}>
+                        {reactionPopup.emoji}
+                      </span>
+                      <span>{reactionPopup.text}</span>
+                    </div>
+                  )}
+                </div>
+
                 <div style={styles.reactionRow}>
                   {["😊", "😐", "😢", "👍", "❤️"].map((emoji) => (
                     <button
@@ -222,15 +287,12 @@ export default function EpisodePage() {
                       disabled={savingReaction}
                       style={styles.emojiButton}
                     >
-                      {emoji}
+                      <span style={styles.emojiButtonIcon}>{emoji}</span>
                     </button>
                   ))}
                 </div>
 
-                <p style={styles.reactionHint}>
-                  Tap an emoji at any point in the audio. Each reaction is saved
-                  with that exact time.
-                </p>
+                
               </div>
             </div>
 
@@ -368,16 +430,42 @@ const styles = {
     color: "#2858a6",
   },
   headerCard: {
+    position: "relative",
+    minHeight: "170px",
     background:
       "radial-gradient(circle at top left, rgba(95,184,143,0.15), transparent 28%), linear-gradient(180deg, #f6fbff 0%, #eef6fb 100%)",
     border: "1px solid #e4eef6",
     borderRadius: "28px",
-    padding: "32px",
     boxShadow: "0 12px 32px rgba(31, 41, 55, 0.06)",
     marginBottom: "24px",
+    overflow: "hidden",
+  },
+  headerImageArea: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    width: "42%",
+    overflow: "hidden",
+  },
+  headerImage: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    display: "block",
+  },
+  headerImageFade: {
+    position: "absolute",
+    inset: 0,
+    background:
+      "linear-gradient(to right, rgba(238,246,251,0.98) 0%, rgba(238,246,251,0.94) 20%, rgba(238,246,251,0.76) 38%, rgba(238,246,251,0.22) 60%, rgba(238,246,251,0) 100%)",
   },
   headerText: {
-    maxWidth: "850px",
+    position: "relative",
+    zIndex: 2,
+    width: "58%",
+    padding: "32px",
+    boxSizing: "border-box",
   },
   tag: {
     display: "inline-block",
@@ -469,6 +557,27 @@ const styles = {
     fontWeight: "700",
     color: "#0f172a",
   },
+  reactionPopupArea: {
+    minHeight: "42px",
+    marginBottom: "8px",
+  },
+  reactionPopup: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "10px",
+    background: "#ffffff",
+    border: "1px solid #d7e3ee",
+    borderRadius: "999px",
+    padding: "10px 14px",
+    fontSize: "13px",
+    fontWeight: "600",
+    color: "#334155",
+    boxShadow: "0 10px 22px rgba(31, 41, 55, 0.08)",
+  },
+  reactionPopupEmoji: {
+    fontSize: "18px",
+    lineHeight: 1,
+  },
   reactionRow: {
     display: "flex",
     gap: "10px",
@@ -481,6 +590,11 @@ const styles = {
     borderRadius: "12px",
     padding: "10px 14px",
     cursor: "pointer",
+    minWidth: "54px",
+    transition: "transform 0.15s ease",
+  },
+  emojiButtonIcon: {
+    display: "inline-block",
   },
   reactionHint: {
     marginTop: "12px",

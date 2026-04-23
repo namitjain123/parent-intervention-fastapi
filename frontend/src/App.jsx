@@ -5,6 +5,17 @@ import LoginPage from "./LoginPage";
 import { useEffect, useState } from "react";
 import ConsentPage from "./ConsentPage";
 
+const episodeImages = {
+  1: "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=1200&q=80",
+  2: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
+  3: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+  4: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80",
+  5: "https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=1200&q=80",
+  6: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80",
+  7: "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1200&q=80",
+  8: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=80",
+};
+
 export default function App() {
   const { instance, accounts, inProgress } = useMsal();
   const isAuthenticated = useIsAuthenticated();
@@ -165,8 +176,7 @@ export default function App() {
     dashboard.episodes?.filter((ep) => ep.status === "completed").length || 0;
 
   const allEpisodesCompleted =
-    dashboard.all_episodes_completed ??
-    dashboard.current_episode > 8;
+    dashboard.all_episodes_completed ?? dashboard.current_episode > 8;
 
   return (
     <div style={styles.page}>
@@ -174,9 +184,7 @@ export default function App() {
         <div style={styles.topBar}>
           <div>
             <div style={styles.brand}>Parenting Platform</div>
-            <div style={styles.brandSub}>
-              Parenting Intervention Program
-            </div>
+            <div style={styles.brandSub}>Parenting Intervention Program</div>
           </div>
 
           <div style={styles.userSection}>
@@ -307,6 +315,8 @@ export default function App() {
                 const isLocked = ep.status === "locked";
                 const isCompleted = ep.status === "completed";
                 const isUnlocked = ep.status === "unlocked";
+                const imageSrc =
+                  ep.image_url || episodeImages[ep.episode_number];
 
                 return (
                   <div
@@ -317,63 +327,77 @@ export default function App() {
                       ...(isCompleted ? styles.episodeCardCompleted : {}),
                     }}
                   >
-                    <div style={styles.episodeTopRow}>
-                      <div style={styles.episodeNumberBadge}>
-                        Episode {ep.episode_number}
-                      </div>
-
-                      <div
-                        style={{
-                          ...styles.statusBadge,
-                          ...(isLocked
-                            ? styles.statusLocked
-                            : isCompleted
-                            ? styles.statusCompleted
-                            : styles.statusUnlocked),
-                        }}
-                      >
-                        {isLocked
-                          ? "Locked"
-                          : isCompleted
-                          ? "Completed"
-                          : "Available"}
-                      </div>
+                    <div style={styles.episodeImageArea}>
+                      <img
+                        src={imageSrc}
+                        alt={`Episode ${ep.episode_number}`}
+                        style={styles.episodeImage}
+                      />
+                      <div style={styles.episodeImageFade}></div>
                     </div>
 
-                    <h4 style={styles.episodeTitle}>{ep.title}</h4>
+                    <div style={styles.episodeContent}>
+                      <div style={styles.episodeTopRow}>
+                        <div style={styles.episodeNumberBadge}>
+                          Episode {ep.episode_number}
+                        </div>
 
-                    <p style={styles.episodeDescription}>
-                      {isCompleted &&
-                        "You have completed this episode successfully."}
-                      {isUnlocked &&
-                        "This episode is ready to start. Continue when you are ready."}
-                      {isLocked &&
-                        "This episode will unlock after you complete the previous required step."}
-                    </p>
-
-                    <div style={styles.episodeFooter}>
-                      {isUnlocked && (
-                        <button
-                          style={styles.openEpisodeButton}
-                          onClick={() =>
-                            (window.location.href = `/episodes/${ep.episode_number}`)
-                          }
+                        <div
+                          style={{
+                            ...styles.statusBadge,
+                            ...(isLocked
+                              ? styles.statusLocked
+                              : isCompleted
+                              ? styles.statusCompleted
+                              : styles.statusUnlocked),
+                          }}
                         >
-                          Open Episode
-                        </button>
-                      )}
+                          {isLocked
+                            ? "Locked"
+                            : isCompleted
+                            ? "Completed"
+                            : "Available"}
+                        </div>
+                      </div>
 
-                      {isLocked && (
-                        <button style={styles.disabledEpisodeButton} disabled>
-                          Locked
-                        </button>
-                      )}
+                      <h4 style={styles.episodeTitle}>{ep.title}</h4>
 
-                      {isCompleted && (
-                        <button style={styles.completedEpisodeButton} disabled>
-                          Completed
-                        </button>
-                      )}
+                      <p style={styles.episodeDescription}>
+                        {isCompleted &&
+                          "You have completed this episode successfully."}
+                        {isUnlocked &&
+                          "This episode is ready to start. Continue when you are ready."}
+                        {isLocked &&
+                          "This episode will unlock after you complete the previous required step."}
+                      </p>
+
+                      <div style={styles.episodeFooter}>
+                        {isUnlocked && (
+                          <button
+                            style={styles.openEpisodeButton}
+                            onClick={() =>
+                              (window.location.href = `/episodes/${ep.episode_number}`)
+                            }
+                          >
+                            Open Episode
+                          </button>
+                        )}
+
+                        {isLocked && (
+                          <button style={styles.disabledEpisodeButton} disabled>
+                            Locked
+                          </button>
+                        )}
+
+                        {isCompleted && (
+                          <button
+                            style={styles.completedEpisodeButton}
+                            disabled
+                          >
+                            Completed
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -785,10 +809,12 @@ const styles = {
     gap: "18px",
   },
   episodeCard: {
-    background: "#ffffff",
-    border: "1px solid #e3ecf4",
+    position: "relative",
+    minHeight: "190px",
     borderRadius: "24px",
-    padding: "22px",
+    overflow: "hidden",
+    border: "1px solid #e3ecf4",
+    background: "#ffffff",
     boxShadow: "0 12px 32px rgba(31, 41, 55, 0.05)",
   },
   episodeCardLocked: {
@@ -798,6 +824,36 @@ const styles = {
   episodeCardCompleted: {
     background: "#f8fffb",
     border: "1px solid #d8f0df",
+  },
+  episodeImageArea: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    width: "42%",
+    overflow: "hidden",
+  },
+  episodeImage: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    display: "block",
+  },
+  episodeImageFade: {
+    position: "absolute",
+    inset: 0,
+    background:
+      "linear-gradient(to right, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.94) 18%, rgba(255,255,255,0.74) 36%, rgba(255,255,255,0.24) 58%, rgba(255,255,255,0) 100%)",
+  },
+  episodeContent: {
+    position: "relative",
+    zIndex: 2,
+    width: "58%",
+    minHeight: "190px",
+    padding: "22px",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
   },
   episodeTopRow: {
     display: "flex",

@@ -26,43 +26,9 @@ export default function LoginPage() {
 
           <p style={styles.lead}>
             A secure research platform for Australian parents and caregivers of
-            adolescents. Learn through short episodes, practical
-            activities, and guided reflection at your own pace.
+            adolescents. Learn through short episodes, practical activities, and
+            guided reflection at your own pace.
           </p>
-
-          <div style={styles.featureGrid}>
-            <div style={styles.featureCard}>
-              <strong style={styles.featureTitle}>Guided weekly program</strong>
-              <div style={styles.featureText}>
-                Eight structured episodes with audio, transcripts, and short
-                learning activities.
-              </div>
-            </div>
-
-            <div style={styles.featureCard}>
-              <strong style={styles.featureTitle}>Simple and easy to use</strong>
-              <div style={styles.featureText}>
-                Designed for parents with low technical literacy on mobile or
-                desktop browsers.
-              </div>
-            </div>
-
-            <div style={styles.featureCard}>
-              <strong style={styles.featureTitle}>Secure participation</strong>
-              <div style={styles.featureText}>
-                Your account uses secure sign-in and a unique participant ID
-                linked to study data.
-              </div>
-            </div>
-
-            <div style={styles.featureCard}>
-              <strong style={styles.featureTitle}>Track your progress</strong>
-              <div style={styles.featureText}>
-                Complete questionnaires and episodes in sequence with clear
-                progress guidance.
-              </div>
-            </div>
-          </div>
 
           <div style={styles.illustrationCard}>
             <div>
@@ -186,6 +152,46 @@ export default function LoginPage() {
               />
             </svg>
           </div>
+
+          <div style={styles.imageStripSection}>
+            <div style={styles.imageStrip}>
+              <div style={styles.imageCard}>
+                <img
+                  src="https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=900&q=80"
+                  alt="Parent and child using a laptop"
+                  style={styles.stripImage}
+                />
+                <div style={styles.imageOverlay}></div>
+              </div>
+
+              <div style={styles.imageCard}>
+                <img
+                  src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80"
+                  alt="Teen learning online"
+                  style={styles.stripImage}
+                />
+                <div style={styles.imageOverlay}></div>
+              </div>
+
+              <div style={styles.imageCard}>
+                <img
+                  src="https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=900&q=80"
+                  alt="Parent supporting child"
+                  style={styles.stripImage}
+                />
+                <div style={styles.imageOverlay}></div>
+              </div>
+
+              <div style={styles.imageCard}>
+                <img
+                  src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80"
+                  alt="Family discussion and guidance"
+                  style={styles.stripImage}
+                />
+                <div style={styles.imageOverlay}></div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div style={styles.auth}>
@@ -196,10 +202,6 @@ export default function LoginPage() {
 
             <div style={styles.panel}>
               <h2 style={styles.panelTitle}>Welcome</h2>
-              <p style={styles.panelSub}>
-                Continue to sign in or create your account securely. You will be
-                guided to the next step automatically.
-              </p>
 
               <div style={styles.secureBanner}>
                 <span style={styles.secureIcon}>🔒</span>
@@ -208,19 +210,13 @@ export default function LoginPage() {
               </div>
 
               <button style={styles.primaryBtn} onClick={handleLogin}>
-                Continue Securely
+                Log in
               </button>
 
               <p style={styles.note}>
                 You will be able to sign in or create an account in the next
                 step.
               </p>
-
-              <div style={styles.policy}>
-                After registration, the first required step is the
-                pre-intervention questionnaire. Episodes stay locked until it is
-                completed.
-              </div>
 
               <div style={styles.trustRow}>
                 <div style={styles.trustItem}>
@@ -251,8 +247,7 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     padding: "24px",
-    background:
-      "linear-gradient(180deg, #eef5fb 0%, #f8fbfd 100%)",
+    background: "linear-gradient(180deg, #eef5fb 0%, #f8fbfd 100%)",
     fontFamily: "Arial, Helvetica, sans-serif",
     boxSizing: "border-box",
   },
@@ -305,29 +300,6 @@ const styles = {
     maxWidth: "620px",
     marginBottom: "28px",
   },
-  featureGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: "14px",
-    marginBottom: "32px",
-  },
-  featureCard: {
-    background: "rgba(255,255,255,0.8)",
-    border: "1px solid #e0e9f2",
-    borderRadius: "18px",
-    padding: "16px",
-  },
-  featureTitle: {
-    display: "block",
-    marginBottom: "6px",
-    fontSize: "15px",
-    color: "#1f2937",
-  },
-  featureText: {
-    color: "#6b7280",
-    fontSize: "14px",
-    lineHeight: "1.45",
-  },
   illustrationCard: {
     background: "rgba(255,255,255,0.92)",
     border: "1px solid #dfebf4",
@@ -337,6 +309,7 @@ const styles = {
     gridTemplateColumns: "1.2fr 0.8fr",
     gap: "18px",
     alignItems: "center",
+    marginBottom: "28px",
   },
   illustrationHeading: {
     margin: "0 0 8px",
@@ -355,6 +328,36 @@ const styles = {
     display: "block",
     borderRadius: "20px",
     background: "#edf6ff",
+  },
+  imageStripSection: {
+    marginTop: "8px",
+  },
+  imageStrip: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: "0",
+    borderRadius: "22px",
+    overflow: "hidden",
+    border: "1px solid #dfe8f2",
+    boxShadow: "0 10px 28px rgba(31, 41, 55, 0.08)",
+  },
+  imageCard: {
+    position: "relative",
+    minHeight: "190px",
+    overflow: "hidden",
+  },
+  stripImage: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    display: "block",
+  },
+  imageOverlay: {
+    position: "absolute",
+    inset: 0,
+    background:
+      "linear-gradient(180deg, rgba(12, 18, 28, 0.08) 0%, rgba(12, 18, 28, 0.18) 100%)",
+    pointerEvents: "none",
   },
   auth: {
     padding: "44px 36px",
@@ -379,15 +382,9 @@ const styles = {
     background: "#fff",
   },
   panelTitle: {
-    margin: "0 0 8px",
+    margin: "0 0 16px",
     fontSize: "30px",
     color: "#1f2937",
-  },
-  panelSub: {
-    color: "#6b7280",
-    fontSize: "15px",
-    lineHeight: "1.5",
-    marginBottom: "20px",
   },
   secureBanner: {
     display: "flex",
@@ -431,16 +428,6 @@ const styles = {
     lineHeight: "1.5",
     textAlign: "center",
   },
-  policy: {
-    marginTop: "16px",
-    fontSize: "12px",
-    color: "#6b7280",
-    lineHeight: "1.55",
-    background: "#fff7ed",
-    border: "1px solid #fed7aa",
-    padding: "10px 12px",
-    borderRadius: "12px",
-  },
   trustRow: {
     display: "grid",
     gridTemplateColumns: "repeat(3, 1fr)",
@@ -456,5 +443,8 @@ const styles = {
     fontSize: "12px",
     color: "#6b7280",
     lineHeight: "1.35",
+    display: "flex",
+    flexDirection: "column",
+    gap: "4px",
   },
 };

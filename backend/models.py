@@ -18,7 +18,8 @@ class User(Base):
     last_activity_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     last_reminder_sent_at = Column(DateTime, nullable=True)
     reminder_count = Column(Integer, default=0)
-
+    midway_reminder_sent_at = Column(DateTime, nullable=True)
+    
     progress = relationship("UserEpisodeProgress", back_populates="user")
 
 
