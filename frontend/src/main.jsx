@@ -7,7 +7,7 @@ import App from "./App";
 import RedcapCompletePage from "./RedcapCompletePage";
 import { msalConfig } from "./authConfig";
 import EpisodePage from "./EpisodePage";
-
+import DelayedRedcapCompletePage from "./DelayedRedcapCompletePage";
 const msalInstance = new PublicClientApplication(msalConfig);
 
 msalInstance.initialize().then(async () => {
@@ -35,6 +35,7 @@ msalInstance.initialize().then(async () => {
           <Routes>
             <Route path="/" element={<App />} />
             <Route path="/redcap-complete" element={<RedcapCompletePage />} />
+            <Route path="/delayed-redcap-complete" element={<DelayedRedcapCompletePage />} />
             <Route path="/episodes/:episodeNumber" element={<EpisodePage />} />
           </Routes>
         </BrowserRouter>

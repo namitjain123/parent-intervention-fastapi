@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useMsal } from "@azure/msal-react";
 import axios from "axios";
 import { apiRequest } from "./authConfig";
+import transcriptData from "./mlproject_final.json";
 
 const episodeImages = {
   1: "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=1400&q=80",
@@ -22,6 +23,8 @@ export default function EpisodePage() {
 
   const [episode, setEpisode] = useState(null);
   const [showTranscript, setShowTranscript] = useState(false);
+  const [transcriptSegments, setTranscriptSegments] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const [quizAnswer, setQuizAnswer] = useState("");
   const [quizSubmitted, setQuizSubmitted] = useState(false);
@@ -34,12 +37,14 @@ export default function EpisodePage() {
   const audioRef = useRef(null);
   const popupTimerRef = useRef(null);
 
+  const toSeconds = (time) => {
+    const [h, m, s] = time.replace(",", ".").split(":");
+    return parseFloat(h) * 3600 + parseFloat(m) * 60 + parseFloat(s);
+  };
+
   const getApiToken = async () => {
     const account = instance.getActiveAccount() || accounts[0];
-
-    if (!account) {
-      throw new Error("No active account found");
-    }
+    if (!account) throw new Error("No active account found");
 
     const response = await instance.acquireTokenSilent({
       ...apiRequest,
@@ -55,12 +60,18 @@ export default function EpisodePage() {
 
       const res = await axios.get(
         `http://127.0.0.1:8000/episodes/${episodeNumber}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       setEpisode(res.data);
+
+      const parsedTranscript = transcriptData.map((seg) => ({
+        ...seg,
+        startSec: toSeconds(seg.start),
+        endSec: toSeconds(seg.end),
+      }));
+
+      setTranscriptSegments(parsedTranscript);
 
       await axios.post(
         `http://127.0.0.1:8000/episodes/${episodeNumber}/start`,
@@ -84,11 +95,9 @@ export default function EpisodePage() {
         {
           question_text: currentQuestion?.question || null,
           response_text: skipped ? null : quizAnswer,
-          skipped: skipped,
+          skipped,
         },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       setQuizSubmitted(true);
@@ -100,16 +109,14 @@ export default function EpisodePage() {
   };
 
   const showReactionPopup = (emoji, currentTime) => {
-    if (popupTimerRef.current) {
-      clearTimeout(popupTimerRef.current);
-    }
+    if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
 
     const minutes = Math.floor(currentTime / 60);
     const seconds = String(currentTime % 60).padStart(2, "0");
 
     setReactionPopup({
       emoji,
-     
+      text: `Saved at ${minutes}:${seconds}`,
     });
 
     popupTimerRef.current = setTimeout(() => {
@@ -123,8 +130,8 @@ export default function EpisodePage() {
       const currentTime = audio ? Math.floor(audio.currentTime) : 0;
 
       showReactionPopup(emoji, currentTime);
-
       setSavingReaction(true);
+
       const token = await getApiToken();
 
       await axios.post(
@@ -133,9 +140,7 @@ export default function EpisodePage() {
           emoji,
           audio_timestamp_seconds: currentTime,
         },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
     } catch (err) {
       console.error("Failed to save reaction:", err);
@@ -168,10 +173,37 @@ export default function EpisodePage() {
   }, [episodeNumber]);
 
   useEffect(() => {
-    return () => {
-      if (popupTimerRef.current) {
-        clearTimeout(popupTimerRef.current);
+    const audio = audioRef.current;
+    if (!audio || transcriptSegments.length === 0) return;
+
+    const interval = setInterval(() => {
+      const currentTime = audio.currentTime;
+
+      const index = transcriptSegments.findIndex(
+        (seg) => currentTime >= seg.startSec && currentTime <= seg.endSec
+      );
+
+      if (index !== -1) {
+        setCurrentIndex(index);
       }
+    }, 200);
+
+    return () => clearInterval(interval);
+  }, [transcriptSegments]);
+
+  useEffect(() => {
+    const activeLine = document.getElementById(`transcript-line-${currentIndex}`);
+    if (activeLine) {
+      activeLine.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [currentIndex]);
+
+  useEffect(() => {
+    return () => {
+      if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
     };
   }, []);
 
@@ -211,6 +243,7 @@ export default function EpisodePage() {
           <div style={styles.headerText}>
             <div style={styles.tag}>Weekly learning episode</div>
             <h1 style={styles.title}>{episode.title}</h1>
+
             {episode.description ? (
               <p style={styles.description}>{episode.description}</p>
             ) : null}
@@ -228,12 +261,37 @@ export default function EpisodePage() {
               <div style={styles.transcriptHeader}>
                 <h3 style={styles.transcriptTitle}>Transcript</h3>
                 <p style={styles.transcriptSub}>
-                  Read along while listening to the episode.
+                  Read along while listening. Click any line to jump to that part.
                 </p>
               </div>
 
               <div style={styles.transcriptBody}>
-                {episode.transcript_text || "No transcript available."}
+                {transcriptSegments.length > 0 ? (
+                  transcriptSegments.map((seg, idx) => (
+                    <div
+                      id={`transcript-line-${idx}`}
+                      key={idx}
+                      onClick={() => {
+                        const audio = audioRef.current;
+                        if (audio) {
+                          audio.currentTime = seg.startSec;
+                          audio.play();
+                        }
+                      }}
+                      style={{
+                        ...styles.transcriptLine,
+                        ...(idx === currentIndex
+                          ? styles.transcriptLineActive
+                          : {}),
+                      }}
+                    >
+                      <div style={styles.transcriptTimestamp}>{seg.start}</div>
+                      <div>{seg.text}</div>
+                    </div>
+                  ))
+                ) : (
+                  <div>No transcript available.</div>
+                )}
               </div>
             </div>
           )}
@@ -291,8 +349,6 @@ export default function EpisodePage() {
                     </button>
                   ))}
                 </div>
-
-                
               </div>
             </div>
 
@@ -358,8 +414,7 @@ export default function EpisodePage() {
             <div style={styles.finishCard}>
               <h3 style={styles.finishTitle}>Finish this episode</h3>
               <p style={styles.finishText}>
-                When you are ready, save your progress and return to the
-                dashboard.
+                When you are ready, save your progress and return to the dashboard.
               </p>
 
               <button onClick={markComplete} style={styles.primaryButton}>
@@ -591,17 +646,9 @@ const styles = {
     padding: "10px 14px",
     cursor: "pointer",
     minWidth: "54px",
-    transition: "transform 0.15s ease",
   },
   emojiButtonIcon: {
     display: "inline-block",
-  },
-  reactionHint: {
-    marginTop: "12px",
-    marginBottom: 0,
-    fontSize: "13px",
-    color: "#64748b",
-    lineHeight: "1.5",
   },
   quizCard: {
     background: "#ffffff",
@@ -733,10 +780,29 @@ const styles = {
   transcriptBody: {
     maxHeight: "58vh",
     overflowY: "auto",
-    whiteSpace: "pre-wrap",
     lineHeight: "1.7",
     fontSize: "15px",
     color: "#334155",
     paddingRight: "6px",
+  },
+  transcriptLine: {
+    display: "grid",
+    gridTemplateColumns: "90px 1fr",
+    gap: "10px",
+    padding: "8px 10px",
+    borderRadius: "10px",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    marginBottom: "4px",
+  },
+  transcriptLineActive: {
+    background: "#e0f2fe",
+    fontWeight: "700",
+    color: "#0f172a",
+  },
+  transcriptTimestamp: {
+    fontSize: "12px",
+    color: "#64748b",
+    fontWeight: "700",
   },
 };

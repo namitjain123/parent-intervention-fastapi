@@ -2,9 +2,10 @@ import os
 import json
 import shutil
 import requests
-from datetime import datetime
-from dotenv import load_dotenv
+from datetime import datetime, timedelta, timezone
+from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -12,8 +13,16 @@ from fastapi.staticfiles import StaticFiles
 from jose import jwt
 from jose.exceptions import JWTError
 from sqlalchemy.orm import Session
+from apscheduler.schedulers.background import BackgroundScheduler
+from pydantic import BaseModel
+
+from database import Base, engine, get_db, SessionLocal
 from utils.activity import update_user_activity
-from database import Base, engine, get_db
+from utils.email_service_classflow import (
+    send_class_b_lock_email,
+    send_class_b_unlock_email,
+)
+
 from models import (
     User,
     Episode,
@@ -21,19 +30,61 @@ from models import (
     UserQuizResponse,
     UserEpisodeReaction,
 )
+
 from schemas import (
     CompletePreQRequest,
     EpisodeCompleteRequest,
     QuizResponseRequest,
     EpisodeReactionRequest,
 )
+
 from blob_service import upload_audio_file
 from utils.transcript_utils import extract_text_from_docx
 
+
 load_dotenv()
 
-app = FastAPI()
+
+class ParticipantOnlyRequest(BaseModel):
+    participant_id: str
+
+
+# =====================================================
+# DELAYED SURVEY SCHEDULER
+# =====================================================
+
+scheduler = BackgroundScheduler()
+
+
+def scheduled_process_delayed_unlocks():
+    db = SessionLocal()
+    try:
+        process_delayed_survey_unlocks(db)
+    finally:
+        db.close()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    scheduler.add_job(
+        scheduled_process_delayed_unlocks,
+        "interval",
+        minutes=1,
+        id="delayed_survey_unlock_job",
+        replace_existing=True,
+    )
+    scheduler.start()
+    print("Scheduler started")
+
+    yield
+
+    scheduler.shutdown()
+    print("Scheduler stopped")
+
+
+app = FastAPI(lifespan=lifespan)
 security = HTTPBearer()
+
 
 TENANT_ID = os.getenv("TENANT_ID")
 CLIENT_ID = os.getenv("CLIENT_ID")
@@ -44,6 +95,7 @@ OPENID_CONFIG_URL = (
     f"{TENANT_ID}/v2.0/.well-known/openid-configuration"
 )
 
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[FRONTEND_URL],
@@ -52,12 +104,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 Base.metadata.create_all(bind=engine)
+
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
-
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
 
 openid_config = requests.get(OPENID_CONFIG_URL).json()
 jwks_uri = openid_config["jwks_uri"]
@@ -65,8 +119,13 @@ issuer = openid_config["issuer"]
 jwks = requests.get(jwks_uri).json()
 
 
+# =====================================================
+# AUTH
+# =====================================================
+
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
+
     try:
         header = jwt.get_unverified_header(token)
         kid = header.get("kid")
@@ -93,6 +152,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
             audience=CLIENT_ID,
             issuer=issuer,
         )
+
         return payload
 
     except JWTError as e:
@@ -126,6 +186,77 @@ def get_or_create_user(user_claims, db: Session):
     return db_user
 
 
+# =====================================================
+# CLASS B HELPERS
+# =====================================================
+
+def ensure_episode_access(db_user: User, episode_number: int):
+    if not db_user.pre_questionnaire_completed:
+        raise HTTPException(status_code=403, detail="Complete pre-questionnaire first")
+
+    if db_user.user_class == "B":
+        if not db_user.delayed_survey_unlocked:
+            raise HTTPException(
+                status_code=403,
+                detail="Delayed survey is still locked. Please come back later.",
+            )
+
+        if not db_user.delayed_survey_completed:
+            raise HTTPException(
+                status_code=403,
+                detail="Complete delayed survey first.",
+            )
+
+    if episode_number > db_user.current_episode:
+        raise HTTPException(status_code=403, detail="Episode is locked")
+
+
+def process_delayed_survey_unlocks(db: Session):
+    now = datetime.now(timezone.utc)
+
+    users = (
+        db.query(User)
+        .filter(
+            User.user_class == "B",
+            User.delayed_survey_unlocked == False,
+            User.delayed_unlock_at.isnot(None),
+            User.delayed_unlock_at <= now,
+        )
+        .all()
+    )
+
+    updated_users = []
+
+    for user in users:
+        user.delayed_survey_unlocked = True
+
+        if not user.unlock_email_sent_at:
+            try:
+                send_class_b_unlock_email(user.email)
+                print(f"Unlock email sent to {user.email}")
+            except Exception as e:
+                print(f"Unlock email failed for {user.email}: {e}")
+
+            # IMPORTANT: mark timestamp even if email fails,
+            # so Azure rate limit does not spam every minute.
+            user.unlock_email_sent_at = now
+
+        updated_users.append(user.email)
+
+    if users:
+        db.commit()
+
+    return {
+        "message": "Processed delayed survey unlocks",
+        "updated_count": len(updated_users),
+        "updated_users": updated_users,
+    }
+
+
+# =====================================================
+# BASIC ROUTES
+# =====================================================
+
 @app.get("/test")
 def test():
     return {"message": "Backend reachable"}
@@ -135,6 +266,7 @@ def test():
 def get_me(user=Depends(verify_token), db: Session = Depends(get_db)):
     db_user = get_or_create_user(user, db)
     update_user_activity(db_user, db)
+
     return {
         "id": db_user.id,
         "azure_id": db_user.azure_id,
@@ -143,6 +275,10 @@ def get_me(user=Depends(verify_token), db: Session = Depends(get_db)):
         "pre_questionnaire_completed": db_user.pre_questionnaire_completed,
         "post_questionnaire_completed": db_user.post_questionnaire_completed,
         "current_episode": db_user.current_episode,
+        "user_class": db_user.user_class,
+        "delayed_survey_unlocked": db_user.delayed_survey_unlocked,
+        "delayed_survey_completed": db_user.delayed_survey_completed,
+        "delayed_unlock_at": db_user.delayed_unlock_at,
     }
 
 
@@ -158,8 +294,11 @@ def get_dashboard(user=Depends(verify_token), db: Session = Depends(get_db)):
     )
 
     episodes = []
+
     for ep in all_episodes:
         if not db_user.pre_questionnaire_completed:
+            status = "locked"
+        elif db_user.user_class == "B" and not db_user.delayed_survey_completed:
             status = "locked"
         elif ep.episode_number < db_user.current_episode:
             status = "completed"
@@ -178,41 +317,139 @@ def get_dashboard(user=Depends(verify_token), db: Session = Depends(get_db)):
             }
         )
 
-    all_episodes_completed = db_user.current_episode > 3
+    all_episodes_completed = db_user.current_episode > 8
 
     return {
         "name": db_user.name,
         "email": db_user.email,
+        "azure_id": db_user.azure_id,
         "pre_questionnaire_completed": db_user.pre_questionnaire_completed,
         "post_questionnaire_completed": db_user.post_questionnaire_completed,
         "current_episode": db_user.current_episode,
         "all_episodes_completed": all_episodes_completed,
+        "user_class": db_user.user_class,
+        "delayed_survey_unlocked": db_user.delayed_survey_unlocked,
+        "delayed_survey_completed": db_user.delayed_survey_completed,
+        "delayed_unlock_at": db_user.delayed_unlock_at,
+        "show_delayed_survey": (
+            db_user.user_class == "B"
+            and db_user.delayed_survey_unlocked
+            and not db_user.delayed_survey_completed
+        ),
+        "delayed_survey_locked": (
+            db_user.user_class == "B"
+            and not db_user.delayed_survey_unlocked
+        ),
         "episodes": episodes,
     }
 
 
+# =====================================================
+# QUESTIONNAIRE ROUTES
+# =====================================================
+
 @app.post("/mark-prequestionnaire-complete")
 def mark_prequestionnaire_complete(
     data: CompletePreQRequest, db: Session = Depends(get_db)
+):
+    print("DATA RECEIVED:", data)
+
+    db_user = db.query(User).filter(User.azure_id == data.participant_id).first()
+
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if not data.user_class:
+        raise HTTPException(status_code=400, detail="user_class is required")
+
+    selected_class_raw = data.user_class.strip()
+
+    if selected_class_raw in ["A", "a", "Class 7-9", "Class 7–9"]:
+        selected_class = "A"
+    elif selected_class_raw in ["B", "b", "Class 9-10", "Class 9–10"]:
+        selected_class = "B"
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=f"user_class must be A or B, got {data.user_class}",
+        )
+
+    db_user.pre_questionnaire_completed = True
+    db_user.user_class = selected_class
+
+    if selected_class == "A":
+        db_user.delayed_survey_unlocked = False
+        db_user.delayed_survey_completed = False
+        db_user.delayed_unlock_at = None
+        db_user.lock_email_sent_at = None
+        db_user.unlock_email_sent_at = None
+
+        if db_user.current_episode == 0:
+            db_user.current_episode = 1
+
+    elif selected_class == "B":
+        now = datetime.now(timezone.utc)
+
+        db_user.delayed_survey_unlocked = False
+        db_user.delayed_survey_completed = False
+        db_user.delayed_unlock_at = now + timedelta(days=30)
+        db_user.current_episode = 0
+
+        if not db_user.lock_email_sent_at:
+            try:
+                send_class_b_lock_email(db_user.email)
+                print(f"Lock email sent to {db_user.email}")
+            except Exception as e:
+                print(f"Lock email failed for {db_user.email}: {e}")
+
+            db_user.lock_email_sent_at = now
+
+        db_user.unlock_email_sent_at = None
+
+    db.commit()
+
+    return {
+        "message": "Pre-questionnaire marked complete",
+        "user_class": db_user.user_class,
+        "delayed_survey_unlocked": db_user.delayed_survey_unlocked,
+        "delayed_survey_completed": db_user.delayed_survey_completed,
+        "delayed_unlock_at": db_user.delayed_unlock_at,
+        "current_episode": db_user.current_episode,
+    }
+
+
+@app.post("/mark-delayed-survey-complete")
+def mark_delayed_survey_complete(
+    data: ParticipantOnlyRequest, db: Session = Depends(get_db)
 ):
     db_user = db.query(User).filter(User.azure_id == data.participant_id).first()
 
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    db_user.pre_questionnaire_completed = True
+    if db_user.user_class != "B":
+        raise HTTPException(status_code=400, detail="User is not in Class B")
+
+    if not db_user.delayed_survey_unlocked:
+        raise HTTPException(status_code=400, detail="Delayed survey is still locked")
+
+    db_user.delayed_survey_completed = True
 
     if db_user.current_episode == 0:
         db_user.current_episode = 1
 
     db.commit()
 
-    return {"message": "Pre-questionnaire marked complete"}
+    return {
+        "message": "Delayed survey marked complete",
+        "current_episode": db_user.current_episode,
+        "delayed_survey_completed": db_user.delayed_survey_completed,
+    }
 
 
 @app.post("/mark-postquestionnaire-complete")
 def mark_postquestionnaire_complete(
-    data: CompletePreQRequest, db: Session = Depends(get_db)
+    data: ParticipantOnlyRequest, db: Session = Depends(get_db)
 ):
     db_user = db.query(User).filter(User.azure_id == data.participant_id).first()
 
@@ -225,6 +462,77 @@ def mark_postquestionnaire_complete(
     return {"message": "Post-questionnaire marked complete"}
 
 
+@app.get("/survey-access-status")
+def survey_access_status(user=Depends(verify_token), db: Session = Depends(get_db)):
+    db_user = get_or_create_user(user, db)
+
+    if not db_user.pre_questionnaire_completed:
+        return {
+            "pre_questionnaire_completed": False,
+            "user_class": db_user.user_class,
+            "locked": True,
+            "show_delayed_survey": False,
+            "episodes_open": False,
+            "message": "Complete pre-questionnaire first",
+        }
+
+    if db_user.user_class == "A":
+        return {
+            "pre_questionnaire_completed": True,
+            "user_class": "A",
+            "locked": False,
+            "show_delayed_survey": False,
+            "episodes_open": True,
+            "message": "Episodes available",
+        }
+
+    if db_user.user_class == "B":
+        if not db_user.delayed_survey_unlocked:
+            return {
+                "pre_questionnaire_completed": True,
+                "user_class": "B",
+                "locked": True,
+                "show_delayed_survey": False,
+                "episodes_open": False,
+                "delayed_unlock_at": db_user.delayed_unlock_at,
+                "message": "Delayed survey is still locked",
+            }
+
+        if db_user.delayed_survey_unlocked and not db_user.delayed_survey_completed:
+            return {
+                "pre_questionnaire_completed": True,
+                "user_class": "B",
+                "locked": False,
+                "show_delayed_survey": True,
+                "episodes_open": False,
+                "delayed_unlock_at": db_user.delayed_unlock_at,
+                "message": "Delayed survey is now open",
+            }
+
+        return {
+            "pre_questionnaire_completed": True,
+            "user_class": "B",
+            "locked": False,
+            "show_delayed_survey": False,
+            "episodes_open": True,
+            "delayed_unlock_at": db_user.delayed_unlock_at,
+            "message": "Episodes available",
+        }
+
+    return {
+        "pre_questionnaire_completed": db_user.pre_questionnaire_completed,
+        "user_class": db_user.user_class,
+        "locked": True,
+        "show_delayed_survey": False,
+        "episodes_open": False,
+        "message": "User class not set",
+    }
+
+
+# =====================================================
+# EPISODE ROUTES
+# =====================================================
+
 @app.get("/episodes/{episode_number}")
 def get_episode(
     episode_number: int,
@@ -232,20 +540,15 @@ def get_episode(
     db: Session = Depends(get_db),
 ):
     db_user = get_or_create_user(user, db)
-
-    if not db_user.pre_questionnaire_completed:
-        raise HTTPException(
-            status_code=403, detail="Complete pre-questionnaire first"
-        )
-
-    if episode_number > db_user.current_episode:
-        raise HTTPException(status_code=403, detail="Episode is locked")
+    ensure_episode_access(db_user, episode_number)
 
     episode = db.query(Episode).filter(Episode.episode_number == episode_number).first()
+
     if not episode:
         raise HTTPException(status_code=404, detail="Episode not found")
 
     quiz_data = []
+
     if episode.quiz_json:
         try:
             quiz_data = json.loads(episode.quiz_json)
@@ -270,16 +573,10 @@ def start_episode(
     db: Session = Depends(get_db),
 ):
     db_user = get_or_create_user(user, db)
-
-    if not db_user.pre_questionnaire_completed:
-        raise HTTPException(
-            status_code=400, detail="Complete pre-questionnaire first"
-        )
-
-    if episode_number > db_user.current_episode:
-        raise HTTPException(status_code=400, detail="Episode is locked")
+    ensure_episode_access(db_user, episode_number)
 
     episode = db.query(Episode).filter(Episode.episode_number == episode_number).first()
+
     if not episode:
         raise HTTPException(status_code=404, detail="Episode not found")
 
@@ -292,18 +589,19 @@ def start_episode(
         .first()
     )
 
+    now = datetime.now(timezone.utc)
+
     if not progress:
         progress = UserEpisodeProgress(
             user_id=db_user.id,
             episode_id=episode.id,
-            started_at=datetime.utcnow(),
+            started_at=now,
             completed=False,
             time_spent_seconds=0,
         )
         db.add(progress)
-    else:
-        if not progress.started_at:
-            progress.started_at = datetime.utcnow()
+    elif not progress.started_at:
+        progress.started_at = now
 
     db.commit()
 
@@ -318,16 +616,13 @@ def complete_episode(
     db: Session = Depends(get_db),
 ):
     db_user = get_or_create_user(user, db)
-
-    if not db_user.pre_questionnaire_completed:
-        raise HTTPException(
-            status_code=400, detail="Complete pre-questionnaire first"
-        )
+    ensure_episode_access(db_user, episode_number)
 
     if episode_number != db_user.current_episode:
         raise HTTPException(status_code=400, detail="Episode is locked")
 
     episode = db.query(Episode).filter(Episode.episode_number == episode_number).first()
+
     if not episode:
         raise HTTPException(status_code=404, detail="Episode not found")
 
@@ -340,19 +635,21 @@ def complete_episode(
         .first()
     )
 
+    now = datetime.now(timezone.utc)
+
     if not progress:
         progress = UserEpisodeProgress(
             user_id=db_user.id,
             episode_id=episode.id,
-            started_at=datetime.utcnow(),
+            started_at=now,
             completed=True,
-            completed_at=datetime.utcnow(),
+            completed_at=now,
             time_spent_seconds=data.time_spent_seconds,
         )
         db.add(progress)
     else:
         progress.completed = True
-        progress.completed_at = datetime.utcnow()
+        progress.completed_at = now
         progress.time_spent_seconds = data.time_spent_seconds
 
     db_user.current_episode += 1
@@ -369,16 +666,10 @@ def save_quiz_response(
     db: Session = Depends(get_db),
 ):
     db_user = get_or_create_user(user, db)
-
-    if not db_user.pre_questionnaire_completed:
-        raise HTTPException(
-            status_code=400, detail="Complete pre-questionnaire first"
-        )
-
-    if episode_number > db_user.current_episode:
-        raise HTTPException(status_code=400, detail="Episode is locked")
+    ensure_episode_access(db_user, episode_number)
 
     episode = db.query(Episode).filter(Episode.episode_number == episode_number).first()
+
     if not episode:
         raise HTTPException(status_code=404, detail="Episode not found")
 
@@ -408,16 +699,10 @@ def save_episode_reaction(
     db: Session = Depends(get_db),
 ):
     db_user = get_or_create_user(user, db)
-
-    if not db_user.pre_questionnaire_completed:
-        raise HTTPException(
-            status_code=400, detail="Complete pre-questionnaire first"
-        )
-
-    if episode_number > db_user.current_episode:
-        raise HTTPException(status_code=400, detail="Episode is locked")
+    ensure_episode_access(db_user, episode_number)
 
     episode = db.query(Episode).filter(Episode.episode_number == episode_number).first()
+
     if not episode:
         raise HTTPException(status_code=404, detail="Episode not found")
 
@@ -439,6 +724,10 @@ def save_episode_reaction(
     }
 
 
+# =====================================================
+# UPLOAD ROUTES
+# =====================================================
+
 @app.post("/upload-transcript/{episode_number}")
 def upload_transcript(
     episode_number: int,
@@ -446,6 +735,7 @@ def upload_transcript(
     db: Session = Depends(get_db),
 ):
     episode = db.query(Episode).filter(Episode.episode_number == episode_number).first()
+
     if not episode:
         raise HTTPException(status_code=404, detail="Episode not found")
 
@@ -453,8 +743,6 @@ def upload_transcript(
 
     with open(temp_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-
-    transcript_text = ""
 
     if file.filename.endswith(".docx"):
         transcript_text = extract_text_from_docx(temp_path)
@@ -468,9 +756,7 @@ def upload_transcript(
         )
 
     episode.transcript_text = transcript_text
-    episode.transcript_url = (
-        f"http://127.0.0.1:8000/uploads/{os.path.basename(temp_path)}"
-    )
+    episode.transcript_url = f"http://127.0.0.1:8000/uploads/{os.path.basename(temp_path)}"
 
     db.commit()
 
@@ -492,8 +778,10 @@ def upload_episode(
 ):
     try:
         parsed_quiz = json.loads(quiz_json)
+
         if not isinstance(parsed_quiz, list):
             raise ValueError("quiz_json must be a list")
+
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid quiz_json format")
 
@@ -554,3 +842,12 @@ def upload_episode(
         "transcript_url": transcript_url,
         "quiz_count": len(parsed_quiz),
     }
+
+
+# =====================================================
+# ADMIN
+# =====================================================
+
+@app.post("/admin/process-delayed-unlocks")
+def admin_process_delayed_unlocks(db: Session = Depends(get_db)):
+    return process_delayed_survey_unlocks(db)

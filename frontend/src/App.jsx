@@ -4,6 +4,7 @@ import { apiRequest } from "./authConfig";
 import LoginPage from "./LoginPage";
 import { useEffect, useState } from "react";
 import ConsentPage from "./ConsentPage";
+import "./App.css";
 
 const episodeImages = {
   1: "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=1200&q=80",
@@ -122,6 +123,27 @@ export default function App() {
       console.error("Failed to open pre-questionnaire:", err);
     }
   };
+  const openDelayedQuestionnaire = async () => {
+  try {
+    const accessToken = token || (await getApiToken());
+    if (!accessToken) return;
+
+    const meRes = await axios.get("http://127.0.0.1:8000/me", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    const participantId = meRes.data.azure_id;
+    localStorage.setItem("participant_id", participantId);
+
+    const delayedRedcapUrl = `${
+      import.meta.env.VITE_REDCAP_DELAYED_URL
+    }&participant_id=${encodeURIComponent(participantId)}`;
+
+    window.location.href = delayedRedcapUrl;
+  } catch (err) {
+    console.error("Failed to open delayed questionnaire:", err);
+  }
+};
 
   const openPostQuestionnaire = async () => {
     try {
@@ -295,9 +317,46 @@ export default function App() {
               </div>
             </div>
           </div>
-        ) : (
-          <div>
-            <div style={styles.sectionHeaderRow}>
+        ) : dashboard.delayed_survey_locked ? (
+  <div className="action-card waiting-card">
+    <div className="card-badge">Locked</div>
+
+    <h2 className="card-title">Your next survey is currently locked</h2>
+
+    <p className="card-text">
+      Thank you for completing the first questionnaire. Your next survey will
+      become available shortly. Please check your email and return later.
+    </p>
+
+    <div className="note-box">
+      Your delayed survey unlock time is:{" "}
+      {dashboard.delayed_unlock_at
+        ? new Date(dashboard.delayed_unlock_at).toLocaleString()
+        : "Not available"}
+    </div>
+  </div>
+) : dashboard.show_delayed_survey ? (
+  <div className="action-card waiting-card">
+    <div className="card-badge">Required</div>
+
+    <h2 className="card-title">Your next survey is now available</h2>
+
+    <p className="card-text">
+      Please complete this delayed survey before accessing the learning episodes.
+    </p>
+
+    <button className="primary-button" onClick={openDelayedQuestionnaire}>
+      Start Delayed Survey
+    </button>
+
+    <div className="note-box">
+      After completing this survey, you will return to the platform and Episode 1
+      will be unlocked.
+    </div>
+  </div>
+) : (
+  <div>
+    <div className="section-header-row">
               <div>
                 <h3 style={styles.episodesHeading}>Your Episodes</h3>
                 <p style={styles.episodesSubtext}>
