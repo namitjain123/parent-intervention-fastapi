@@ -3,7 +3,6 @@ import axios from "axios";
 import { apiRequest } from "./authConfig";
 import LoginPage from "./LoginPage";
 import { useEffect, useState } from "react";
-import ConsentPage from "./ConsentPage";
 import "./App.css";
 
 const episodeImages = {
@@ -24,7 +23,7 @@ export default function App() {
   const [token, setToken] = useState("");
   const [dashboard, setDashboard] = useState(null);
   const [hasLoaded, setHasLoaded] = useState(false);
-  const [hasConsented, setHasConsented] = useState(null);
+
 
   const getApiToken = async () => {
     let account = instance.getActiveAccount();
@@ -72,17 +71,7 @@ export default function App() {
     }
   };
 
-  useEffect(() => {
-    const consent = localStorage.getItem("user_consent");
 
-    if (consent === "true") {
-      setHasConsented(true);
-    } else if (consent === "false") {
-      setHasConsented(false);
-    } else {
-      setHasConsented(null);
-    }
-  }, []);
 
   useEffect(() => {
     if (window !== window.parent) return;
@@ -167,22 +156,7 @@ export default function App() {
     }
   };
 
-  if (hasConsented === null) {
-    return <ConsentPage onConsent={setHasConsented} />;
-  }
-
-  if (hasConsented === false) {
-    return (
-      <div style={styles.declinePage}>
-        <div style={styles.declineCard}>
-          <h2 style={styles.declineTitle}>You chose not to participate</h2>
-          <p style={styles.declineText}>
-            You cannot continue without providing consent.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  
 
   if (!isAuthenticated) return <LoginPage />;
 
