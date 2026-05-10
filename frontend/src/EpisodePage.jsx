@@ -4,6 +4,7 @@ import { useMsal } from "@azure/msal-react";
 import axios from "axios";
 import { apiRequest } from "./authConfig";
 import transcriptData from "./mlproject_final.json";
+import { API_BASE_URL } from "./config";
 
 const episodeImages = {
   1: "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=1400&q=80",
@@ -62,7 +63,7 @@ export default function EpisodePage() {
       const token = await getApiToken();
 
       const res = await axios.get(
-        `http://127.0.0.1:8000/episodes/${episodeNumber}`,
+        `${API_BASE_URL}/episodes/${episodeNumber}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -78,7 +79,7 @@ export default function EpisodePage() {
       setFullTranscript(parsedTranscript);
 
       await axios.post(
-        `http://127.0.0.1:8000/episodes/${episodeNumber}/start`,
+        `${API_BASE_URL}/episodes/${episodeNumber}/start`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -95,7 +96,7 @@ export default function EpisodePage() {
       const token = await getApiToken();
 
       await axios.post(
-        `http://127.0.0.1:8000/episodes/${episodeNumber}/quiz-response`,
+        `${API_BASE_URL}/episodes/${episodeNumber}/quiz-response`,
         {
           question_text: currentQuestion?.question || null,
           response_text: skipped ? null : quizAnswer,
@@ -139,7 +140,7 @@ export default function EpisodePage() {
       const token = await getApiToken();
 
       await axios.post(
-        `http://127.0.0.1:8000/episodes/${episodeNumber}/reaction`,
+        `${API_BASE_URL}/episodes/${episodeNumber}/reaction`,
         {
           emoji,
           audio_timestamp_seconds: currentTime,
@@ -161,7 +162,7 @@ export default function EpisodePage() {
       const timeSpentSeconds = Math.floor((Date.now() - startedAt) / 1000);
 
       await axios.post(
-        `http://127.0.0.1:8000/episodes/${episodeNumber}/complete`,
+        `${API_BASE_URL}/episodes/${episodeNumber}/complete`,
         { time_spent_seconds: timeSpentSeconds },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -262,28 +263,26 @@ export default function EpisodePage() {
 
               <div style={styles.transcriptBody}>
                 {fullTranscript.length > 0 ? (
-                  <p style={styles.transcriptParagraph}>
-                    {fullTranscript.map((seg, idx) => (
-                      <span
-                        key={idx}
-                        onClick={() => {
-                          const audio = audioRef.current;
-                          if (audio) {
-                            audio.currentTime = seg.startSec;
-                            audio.play();
-                          }
-                        }}
-                        style={{
-                          ...styles.transcriptTextChunk,
-                          ...(idx === currentIndex
-                            ? styles.transcriptTextChunkActive
-                            : {}),
-                        }}
-                      >
-                        {seg.text + " "}
-                      </span>
-                    ))}
-                  </p>
+                 <div style={styles.transcriptContainer}>
+  {fullTranscript.map((seg, idx) => (
+    <div
+      key={idx}
+      onClick={() => {
+        const audio = audioRef.current;
+        if (audio) {
+          audio.currentTime = seg.startSec;
+          audio.play();
+        }
+      }}
+      style={{
+        ...styles.transcriptBlock,
+        ...(idx === currentIndex ? styles.transcriptBlockActive : {}),
+      }}
+    >
+      {seg.text}
+    </div>
+  ))}
+</div>
                 ) : (
                   <div>No transcript available.</div>
                 )}
@@ -738,6 +737,26 @@ const styles = {
     cursor: "pointer",
     boxShadow: "0 10px 22px rgba(53,109,203,0.22)",
   },
+  transcriptContainer: {
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px",
+},
+
+transcriptBlock: {
+  cursor: "pointer",
+  padding: "8px 10px",
+  borderRadius: "8px",
+  lineHeight: "1.6",
+  fontSize: "15px",
+  transition: "all 0.2s ease",
+},
+
+transcriptBlockActive: {
+  backgroundColor: "#dbeafe",
+  fontWeight: "600",
+  color: "#0f172a",
+},
   secondaryFinishButton: {
     background: "#ffffff",
     color: "#334155",

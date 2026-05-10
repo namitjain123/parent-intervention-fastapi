@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "./config";
 
 export default function RedcapPostCompletePage() {
   useEffect(() => {
@@ -16,7 +17,7 @@ export default function RedcapPostCompletePage() {
           return;
         }
 
-        await axios.post("http://127.0.0.1:8000/mark-postquestionnaire-complete", {
+        await axios.post(`${API_BASE_URL}/mark-postquestionnaire-complete`, {
           participant_id: participantId,
         });
 

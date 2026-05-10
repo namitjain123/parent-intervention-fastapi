@@ -15,7 +15,7 @@ export default function DelayedRedcapCompletePage() {
           return;
         }
 
-        await axios.post("http://127.0.0.1:8000/mark-delayed-survey-complete", {
+        await axios.post(`${API_BASE_URL}/mark-delayed-survey-complete`, {
           participant_id: participantId,
         });
 

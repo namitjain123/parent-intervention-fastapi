@@ -43,7 +43,7 @@ from utils.transcript_utils import extract_text_from_docx
 
 
 load_dotenv()
-
+BACKEND_BASE_URL = os.getenv("BACKEND_BASE_URL", "http://127.0.0.1:8000")
 
 class ParticipantOnlyRequest(BaseModel):
     participant_id: str
@@ -756,7 +756,7 @@ def upload_transcript(
         )
 
     episode.transcript_text = transcript_text
-    episode.transcript_url = f"http://127.0.0.1:8000/uploads/{os.path.basename(temp_path)}"
+    episode.transcript_url = f"{BACKEND_BASE_URL}/uploads/{os.path.basename(temp_path)}"
 
     db.commit()
 
@@ -798,11 +798,11 @@ def upload_episode(
         with open(transcript_path, "wb") as buffer:
             shutil.copyfileobj(transcript_file.file, buffer)
 
-        transcript_url = f"http://127.0.0.1:8000/uploads/{transcript_filename}"
+        transcript_url = f"{BACKEND_BASE_URL}/uploads/{transcript_filename}"
 
         if transcript_file.filename.endswith(".docx"):
             transcript_text = extract_text_from_docx(transcript_path)
-        elif transcript_file.filename.endswith(".txt"):
+        elif transcript_file.filename.endswith(".json"):
             with open(transcript_path, "r", encoding="utf-8") as f:
                 transcript_text = f.read()
         else:

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useMsal, useIsAuthenticated } from "@azure/msal-react";
 import { loginRequest } from "./authConfig";
 
@@ -5,8 +6,18 @@ export default function LoginPage() {
   const { instance } = useMsal();
   const isAuthenticated = useIsAuthenticated();
 
+  const [redcapConsent, setRedcapConsent] = useState(false);
+  const [termsConsent, setTermsConsent] = useState(false);
+  const [showConsentModal, setShowConsentModal] = useState(false);
+
+  const canLogin = redcapConsent && termsConsent;
+
   const handleLogin = () => {
     instance.loginRedirect(loginRequest);
+  };
+
+  const openRedcapConsent = () => {
+    window.open(import.meta.env.VITE_REDCAP_CONSENT_URL, "_blank");
   };
 
   if (isAuthenticated) return null;
@@ -50,146 +61,37 @@ export default function LoginPage() {
             >
               <rect width="320" height="240" rx="24" fill="#edf6ff" />
               <circle cx="237" cy="54" r="24" fill="#d8ebff" />
-              <rect
-                x="44"
-                y="132"
-                width="118"
-                height="58"
-                rx="12"
-                fill="#ffffff"
-                stroke="#d6e6f5"
-              />
-              <rect
-                x="72"
-                y="88"
-                width="118"
-                height="70"
-                rx="14"
-                fill="#356dcb"
-                opacity="0.12"
-              />
-              <rect
-                x="78"
-                y="96"
-                width="106"
-                height="56"
-                rx="10"
-                fill="#ffffff"
-              />
-              <rect
-                x="88"
-                y="106"
-                width="44"
-                height="8"
-                rx="4"
-                fill="#bdd6f8"
-              />
-              <rect
-                x="88"
-                y="122"
-                width="70"
-                height="8"
-                rx="4"
-                fill="#d6e6f8"
-              />
-              <rect
-                x="88"
-                y="138"
-                width="58"
-                height="8"
-                rx="4"
-                fill="#d6e6f8"
-              />
+              <rect x="44" y="132" width="118" height="58" rx="12" fill="#ffffff" stroke="#d6e6f5" />
+              <rect x="72" y="88" width="118" height="70" rx="14" fill="#356dcb" opacity="0.12" />
+              <rect x="78" y="96" width="106" height="56" rx="10" fill="#ffffff" />
+              <rect x="88" y="106" width="44" height="8" rx="4" fill="#bdd6f8" />
+              <rect x="88" y="122" width="70" height="8" rx="4" fill="#d6e6f8" />
+              <rect x="88" y="138" width="58" height="8" rx="4" fill="#d6e6f8" />
               <circle cx="215" cy="119" r="32" fill="#ffd9bf" />
-              <rect
-                x="187"
-                y="148"
-                width="56"
-                height="58"
-                rx="18"
-                fill="#5fb88f"
-              />
+              <rect x="187" y="148" width="56" height="58" rx="18" fill="#5fb88f" />
               <circle cx="142" cy="132" r="25" fill="#ffd9bf" />
-              <rect
-                x="122"
-                y="157"
-                width="42"
-                height="49"
-                rx="14"
-                fill="#f1b24a"
-              />
-              <path
-                d="M115 111c8-20 41-24 52-4 3 6 2 12-1 16h-46c-5-4-8-8-5-12z"
-                fill="#374151"
-              />
-              <path
-                d="M190 95c8-22 40-24 51-2 3 6 3 13-1 18h-46c-7-6-7-11-4-16z"
-                fill="#1f2937"
-              />
-              <rect
-                x="235"
-                y="151"
-                width="32"
-                height="10"
-                rx="5"
-                fill="#7dc6a3"
-              />
-              <rect
-                x="229"
-                y="167"
-                width="44"
-                height="10"
-                rx="5"
-                fill="#7dc6a3"
-              />
-              <rect
-                x="224"
-                y="183"
-                width="54"
-                height="10"
-                rx="5"
-                fill="#7dc6a3"
-              />
+              <rect x="122" y="157" width="42" height="49" rx="14" fill="#f1b24a" />
+              <path d="M115 111c8-20 41-24 52-4 3 6 2 12-1 16h-46c-5-4-8-8-5-12z" fill="#374151" />
+              <path d="M190 95c8-22 40-24 51-2 3 6 3 13-1 18h-46c-7-6-7-11-4-16z" fill="#1f2937" />
+              <rect x="235" y="151" width="32" height="10" rx="5" fill="#7dc6a3" />
+              <rect x="229" y="167" width="44" height="10" rx="5" fill="#7dc6a3" />
+              <rect x="224" y="183" width="54" height="10" rx="5" fill="#7dc6a3" />
             </svg>
           </div>
 
           <div style={styles.imageStripSection}>
             <div style={styles.imageStrip}>
-              <div style={styles.imageCard}>
-                <img
-                  src="https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=900&q=80"
-                  alt="Parent and child using a laptop"
-                  style={styles.stripImage}
-                />
-                <div style={styles.imageOverlay}></div>
-              </div>
-
-              <div style={styles.imageCard}>
-                <img
-                  src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80"
-                  alt="Teen learning online"
-                  style={styles.stripImage}
-                />
-                <div style={styles.imageOverlay}></div>
-              </div>
-
-              <div style={styles.imageCard}>
-                <img
-                  src="https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=900&q=80"
-                  alt="Parent supporting child"
-                  style={styles.stripImage}
-                />
-                <div style={styles.imageOverlay}></div>
-              </div>
-
-              <div style={styles.imageCard}>
-                <img
-                  src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80"
-                  alt="Family discussion and guidance"
-                  style={styles.stripImage}
-                />
-                <div style={styles.imageOverlay}></div>
-              </div>
+              {[
+                "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=900&q=80",
+                "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80",
+                "https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=900&q=80",
+                "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80",
+              ].map((src, index) => (
+                <div style={styles.imageCard} key={index}>
+                  <img src={src} alt="Parenting support" style={styles.stripImage} />
+                  <div style={styles.imageOverlay}></div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -205,18 +107,48 @@ export default function LoginPage() {
 
               <div style={styles.secureBanner}>
                 <span style={styles.secureIcon}>🔒</span>
-                Your account and study data are protected with secure
-                authentication.
+                Your account and study data are protected with secure authentication.
               </div>
 
-              <button style={styles.primaryBtn} onClick={handleLogin}>
-                Log in
-              </button>
+              <div style={styles.checkboxBox}>
+                <label style={styles.checkboxRow}>
+                  <input
+                    type="checkbox"
+                    checked={redcapConsent}
+                    onChange={(e) => setRedcapConsent(e.target.checked)}
+                  />
+                  <span>
+                    I have completed the REDCap consent form.{" "}
+                    <button type="button" style={styles.linkButton} onClick={openRedcapConsent}>
+                      Open REDCap
+                    </button>
+                  </span>
+                </label>
 
-              <p style={styles.note}>
-                You will be able to sign in or create an account in the next
-                step.
-              </p>
+                <div style={styles.checkboxRow}>
+                  <input type="checkbox" checked={termsConsent} readOnly />
+                  <span>
+                    I agree to the{" "}
+                    <button
+                      type="button"
+                      style={styles.linkButton}
+                      onClick={() => setShowConsentModal(true)}
+                    >
+                      Consent Form & Terms
+                    </button>
+                  </span>
+                </div>
+              </div>
+
+              {canLogin ? (
+                <button style={styles.primaryBtn} onClick={handleLogin}>
+                  Log in
+                </button>
+              ) : (
+                <p style={styles.note}>
+                  Please complete both consent steps to continue.
+                </p>
+              )}
 
               <div style={styles.trustRow}>
                 <div style={styles.trustItem}>
@@ -236,6 +168,82 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+
+      {showConsentModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalCard}>
+            <h2 style={styles.modalTitle}>Consent Form – Survey</h2>
+
+            <div style={styles.modalContent}>
+              <h3 style={styles.modalSubTitle}>Declaration by the participant</h3>
+
+              <p>
+                I have read the Participant Information Sheet, or someone has read it to me
+                in a language that I understand. I have had an opportunity to ask questions,
+                and I am satisfied with the answers I have received.
+              </p>
+
+              <p>
+                I understand the purposes, study tasks and risks of the research described
+                in the study and understand that I am free to withdraw at any time during the
+                study, and withdrawal will not affect my relationship with the research team members.
+              </p>
+
+              <p>
+                I understand I am agreeing to participate in the online survey as outlined
+                in the Participant Information Sheet.
+              </p>
+
+              <p>
+                I understand that data analysis will be conducted using research software tools
+                such as statistical software, qualitative analysis programs, and AI-assisted tools
+                for analysing patterns and themes in de-identified data only, within the university’s secure systems.
+              </p>
+
+              <p>
+                I may exit the survey at any time by closing the survey window on my device.
+                There is no obligation to answer all questions or finish the survey.
+              </p>
+
+              <p>
+                If I exit the survey before submitting my responses, my responses will not be
+                included in the research.
+              </p>
+
+              <p>
+                I understand that I can withdraw from the study at any time before submitting the survey.
+                Once my responses are submitted, they cannot be withdrawn because they are collected
+                anonymously and do not contain identifying information.
+              </p>
+
+              <p style={styles.boldText}>
+                Clicking “Yes, I agree to participate” below means I consent to take part in this study.
+              </p>
+            </div>
+
+            <div style={styles.modalActions}>
+              <button
+                type="button"
+                style={styles.secondaryBtn}
+                onClick={() => setShowConsentModal(false)}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                style={styles.modalPrimaryBtn}
+                onClick={() => {
+                  setTermsConsent(true);
+                  setShowConsentModal(false);
+                }}
+              >
+                Yes, I agree to participate
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -410,6 +418,28 @@ const styles = {
     fontWeight: "bold",
     flexShrink: 0,
   },
+  checkboxBox: {
+    display: "grid",
+    gap: "12px",
+    marginBottom: "18px",
+  },
+  checkboxRow: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: "10px",
+    fontSize: "14px",
+    color: "#334155",
+    lineHeight: "1.5",
+  },
+  linkButton: {
+    border: "none",
+    background: "transparent",
+    color: "#2563eb",
+    fontWeight: "700",
+    cursor: "pointer",
+    textDecoration: "underline",
+    padding: 0,
+  },
   primaryBtn: {
     width: "100%",
     border: "none",
@@ -446,5 +476,69 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     gap: "4px",
+  },
+  modalOverlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(15, 23, 42, 0.55)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000,
+    padding: "20px",
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: "720px",
+    background: "#ffffff",
+    borderRadius: "22px",
+    padding: "26px",
+    boxShadow: "0 24px 70px rgba(15, 23, 42, 0.28)",
+    maxHeight: "84vh",
+    overflowY: "auto",
+  },
+  modalTitle: {
+    margin: "0 0 10px",
+    fontSize: "26px",
+    color: "#0f172a",
+  },
+  modalSubTitle: {
+    margin: "0 0 10px",
+    fontSize: "17px",
+    color: "#1f2937",
+  },
+  modalContent: {
+    fontSize: "14px",
+    lineHeight: "1.65",
+    color: "#334155",
+  },
+  boldText: {
+    fontWeight: "700",
+    color: "#0f172a",
+  },
+  modalActions: {
+    marginTop: "22px",
+    display: "flex",
+    justifyContent: "flex-end",
+    gap: "12px",
+    flexWrap: "wrap",
+  },
+  secondaryBtn: {
+    border: "1px solid #cbd5e1",
+    borderRadius: "14px",
+    padding: "12px 16px",
+    background: "#ffffff",
+    color: "#334155",
+    fontWeight: "700",
+    cursor: "pointer",
+  },
+  modalPrimaryBtn: {
+    border: "none",
+    borderRadius: "14px",
+    padding: "12px 16px",
+    background: "#356dcb",
+    color: "#ffffff",
+    fontWeight: "700",
+    cursor: "pointer",
   },
 };

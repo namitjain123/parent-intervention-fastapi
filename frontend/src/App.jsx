@@ -4,7 +4,7 @@ import { apiRequest } from "./authConfig";
 import LoginPage from "./LoginPage";
 import { useEffect, useState } from "react";
 import "./App.css";
-
+import { API_BASE_URL } from "./config";
 const episodeImages = {
   1: "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=1200&q=80",
   2: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
@@ -57,11 +57,11 @@ export default function App() {
 
       setToken(accessToken);
 
-      await axios.get("http://127.0.0.1:8000/me", {
+      await axios.get(`${API_BASE_URL}/me`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
-      const res = await axios.get("http://127.0.0.1:8000/dashboard", {
+      const res = await axios.get(`${API_BASE_URL}/dashboard`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
@@ -96,7 +96,7 @@ export default function App() {
       const accessToken = token || (await getApiToken());
       if (!accessToken) return;
 
-      const meRes = await axios.get("http://127.0.0.1:8000/me", {
+      const meRes = await axios.get(`${API_BASE_URL}/me`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
@@ -117,7 +117,7 @@ export default function App() {
     const accessToken = token || (await getApiToken());
     if (!accessToken) return;
 
-    const meRes = await axios.get("http://127.0.0.1:8000/me", {
+    const meRes = await axios.get(`${API_BASE_URL}/me`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
@@ -139,7 +139,7 @@ export default function App() {
       const accessToken = token || (await getApiToken());
       if (!accessToken) return;
 
-      const meRes = await axios.get("http://127.0.0.1:8000/me", {
+      const meRes = await axios.get(`${API_BASE_URL}/me`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
