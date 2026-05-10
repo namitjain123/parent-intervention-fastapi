@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useMsal } from "@azure/msal-react";
 import axios from "axios";
 import { apiRequest } from "./authConfig";
-import transcriptData from "./mlproject_final.json";
+
 import { API_BASE_URL } from "./config";
 
 const episodeImages = {
@@ -69,7 +69,7 @@ export default function EpisodePage() {
 
       setEpisode(res.data);
 
-      const parsedTranscript = transcriptData.map((seg, index) => ({
+      const parsedTranscript = res.data.transcript.map((seg, index) => ({
         id: index,
         text: seg.text.replace(/\n/g, " "),
         startSec: toSeconds(seg.start),

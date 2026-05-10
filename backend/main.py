@@ -4,7 +4,6 @@ import shutil
 import requests
 from datetime import datetime, timedelta, timezone
 from contextlib import asynccontextmanager
-
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,7 +14,7 @@ from jose.exceptions import JWTError
 from sqlalchemy.orm import Session
 from apscheduler.schedulers.background import BackgroundScheduler
 from pydantic import BaseModel
-
+from blob_service import upload_file_to_blob
 from database import Base, engine, get_db, SessionLocal
 from utils.activity import update_user_activity
 from utils.email_service_classflow import (
@@ -38,7 +37,6 @@ from schemas import (
     EpisodeReactionRequest,
 )
 
-from blob_service import upload_audio_file
 from utils.transcript_utils import extract_text_from_docx
 
 
@@ -548,6 +546,7 @@ def get_episode(
         raise HTTPException(status_code=404, detail="Episode not found")
 
     quiz_data = []
+    transcript_data = []
 
     if episode.quiz_json:
         try:
@@ -555,13 +554,19 @@ def get_episode(
         except json.JSONDecodeError:
             quiz_data = []
 
+    if episode.transcript_text:
+        try:
+            transcript_data = json.loads(episode.transcript_text)
+        except json.JSONDecodeError:
+            transcript_data = []
+
     return {
         "episode_number": episode.episode_number,
         "title": episode.title,
         "description": episode.description,
         "audio_url": episode.audio_url,
         "transcript_url": episode.transcript_url,
-        "transcript_text": episode.transcript_text or "",
+        "transcript": transcript_data,
         "quiz": quiz_data,
     }
 
@@ -723,11 +728,7 @@ def save_episode_reaction(
         "audio_timestamp_seconds": reaction.audio_timestamp_seconds,
     }
 
-
-# =====================================================
 # UPLOAD ROUTES
-# =====================================================
-
 @app.post("/upload-transcript/{episode_number}")
 def upload_transcript(
     episode_number: int,
@@ -752,11 +753,15 @@ def upload_transcript(
     else:
         raise HTTPException(
             status_code=400,
-            detail="Only .docx or .txt transcript files are supported",
+            detail="Only .docx or .json transcript files are supported",
         )
 
     episode.transcript_text = transcript_text
-    episode.transcript_url = f"{BACKEND_BASE_URL}/uploads/{os.path.basename(temp_path)}"
+    episode.transcript_url = upload_file_to_blob(
+        transcript_text.encode("utf-8"),
+        f"transcript_{episode_number}.txt",
+        "text/plain"
+    )
 
     db.commit()
 
@@ -786,19 +791,32 @@ def upload_episode(
         raise HTTPException(status_code=400, detail="Invalid quiz_json format")
 
     filename = f"episode_{episode_number}_{audio_file.filename}"
-    audio_url = upload_audio_file(audio_file.file, filename)
+    audio_url = upload_file_to_blob(
+        audio_file.file,
+        filename,
+        audio_file.content_type
+    )
 
     transcript_url = None
     transcript_text = None
 
     if transcript_file:
         transcript_filename = f"episode_{episode_number}_{transcript_file.filename}"
-        transcript_path = os.path.join(UPLOAD_DIR, transcript_filename)
+        transcript_bytes = transcript_file.file.read()
+
+        transcript_url = upload_file_to_blob(
+            transcript_bytes,
+            transcript_filename,
+            transcript_file.content_type
+        )
+
+        transcript_path = os.path.join(
+            UPLOAD_DIR,
+            transcript_filename
+        )
 
         with open(transcript_path, "wb") as buffer:
-            shutil.copyfileobj(transcript_file.file, buffer)
-
-        transcript_url = f"{BACKEND_BASE_URL}/uploads/{transcript_filename}"
+            buffer.write(transcript_bytes)
 
         if transcript_file.filename.endswith(".docx"):
             transcript_text = extract_text_from_docx(transcript_path)
