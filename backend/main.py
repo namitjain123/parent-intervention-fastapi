@@ -86,7 +86,7 @@ security = HTTPBearer()
 
 TENANT_ID = os.getenv("TENANT_ID")
 CLIENT_ID = os.getenv("CLIENT_ID")
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://gray-sea-01865ef00.7.azurestaticapps.net")
 
 OPENID_CONFIG_URL = (
     f"https://parentingplatform.ciamlogin.com/"

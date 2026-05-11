@@ -6,7 +6,7 @@ load_dotenv()
 
 ACS_CONNECTION_STRING = os.getenv("AZURE_COMMUNICATION_CONNECTION_STRING")
 ACS_SENDER_EMAIL = os.getenv("AZURE_EMAIL_SENDER")
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://gray-sea-01865ef00.7.azurestaticapps.net")
 
 
 def send_email(to_email: str, subject: str, html_content: str):
