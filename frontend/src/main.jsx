@@ -13,6 +13,8 @@ const msalInstance = new PublicClientApplication(msalConfig);
 msalInstance.initialize().then(async () => {
   const response = await msalInstance.handleRedirectPromise();
 
+
+  
   if (response && response.account) {
     msalInstance.setActiveAccount(response.account);
   } else {
