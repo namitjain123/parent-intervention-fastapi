@@ -179,3 +179,6 @@ https://redcap.deakin.edu.au/surveys/?s=9N8KP3P4P4AAMDPC
 
  venv\Scripts\activate    
   uvicorn main:app --reload
+
+  parent-intervention-e5bqdkazaaf9f4f6.australiaeast-01.azurewebsites.net
+  https://gray-sea-01865ef00.7.azurestaticapps.net/
