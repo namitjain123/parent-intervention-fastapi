@@ -8,14 +8,14 @@ import { API_BASE_URL } from "./config";
 import { useIsMobile } from "./useIsMobile";
 
 const episodeImages = {
-  1: "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=1400&q=80",
-  2: "https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=1400&q=80",
-  3: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1400&q=80",
-  4: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1400&q=80",
-  5: "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1400&q=80",
-  6: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1400&q=80",
-  7: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1400&q=80",
-  8: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1400&q=80",
+  1: "/episode%201.jpg",
+  2: "/episode%202.jpg",
+  3: "/episode%203.jpg",
+  4: "/episode%204.jpg",
+  5: "/episode%205.jpg",
+  6: "/episode%206.jpg",
+  7: "/episode%206.jpg",
+  8: "/episode%206.jpg",
 };
 
 export default function EpisodePage() {
