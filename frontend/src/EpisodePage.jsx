@@ -41,6 +41,7 @@ export default function EpisodePage() {
   const startedAtRef = useRef(null);
   const audioRef = useRef(null);
   const popupTimerRef = useRef(null);
+  const activeSegmentRef = useRef(null);
 
   const toSeconds = (time) => {
     const [h, m, s] = time.replace(",", ".").split(":");
@@ -202,6 +203,10 @@ export default function EpisodePage() {
   }, [fullTranscript]);
 
   useEffect(() => {
+    activeSegmentRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [currentIndex]);
+
+  useEffect(() => {
     return () => {
       if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
     };
@@ -263,8 +268,7 @@ export default function EpisodePage() {
               <div style={styles.transcriptHeader}>
                 <h3 style={styles.transcriptTitle}>Transcript</h3>
                 <p style={styles.transcriptSub}>
-                  Read along while listening. Click any sentence to jump to that
-                  part.
+                  Read along while listening. The transcript scrolls automatically.
                 </p>
               </div>
 
@@ -274,6 +278,7 @@ export default function EpisodePage() {
   {fullTranscript.map((seg, idx) => (
     <div
       key={idx}
+      ref={idx === currentIndex ? activeSegmentRef : null}
       style={{
         ...styles.transcriptBlock,
         ...(idx === currentIndex ? styles.transcriptBlockActive : {}),
@@ -434,8 +439,8 @@ export default function EpisodePage() {
                 dashboard.
               </p>
 
-              <button onClick={markComplete} style={styles.primaryButton}>
-                Finish Episode
+              <button onClick={markComplete} style={styles.continueButton}>
+                Continue →
               </button>
             </div>
           </div>
@@ -782,6 +787,19 @@ const styles = {
     fontWeight: "700",
     cursor: "pointer",
     boxShadow: "0 10px 22px rgba(53,109,203,0.22)",
+  },
+  continueButton: {
+    width: "100%",
+    background: "#356dcb",
+    color: "#ffffff",
+    border: "none",
+    borderRadius: "18px",
+    padding: "20px 24px",
+    fontSize: "22px",
+    fontWeight: "800",
+    cursor: "pointer",
+    boxShadow: "0 12px 28px rgba(53,109,203,0.35)",
+    letterSpacing: "0.3px",
   },
   transcriptContainer: {
   display: "flex",
