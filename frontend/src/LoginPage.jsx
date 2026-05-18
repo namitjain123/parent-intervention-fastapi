@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMsal, useIsAuthenticated } from "@azure/msal-react";
 import { loginRequest } from "./authConfig";
+import { useIsMobile } from "./useIsMobile";
 
 export default function LoginPage() {
   const { instance } = useMsal();
@@ -10,6 +11,7 @@ export default function LoginPage() {
   const [termsConsent, setTermsConsent] = useState(false);
   const [showConsentModal, setShowConsentModal] = useState(false);
 
+  const isMobile = useIsMobile();
   const canLogin = redcapConsent && termsConsent;
 
   const handleLogin = () => {
@@ -23,15 +25,15 @@ export default function LoginPage() {
   if (isAuthenticated) return null;
 
   return (
-    <div style={styles.page}>
-      <div style={styles.shell}>
-        <div style={styles.hero}>
+    <div style={{...styles.page, padding: isMobile ? "12px" : "24px", alignItems: isMobile ? "flex-start" : "center"}}>
+      <div style={{...styles.shell, gridTemplateColumns: isMobile ? "1fr" : "1.1fr 0.9fr"}}>
+        <div style={{...styles.hero, padding: isMobile ? "32px 20px" : "56px 52px"}}>
           <div style={styles.brand}>
             <span style={styles.brandDot}></span>
             Parenting Intervention Platform
           </div>
 
-          <h1 style={styles.heroTitle}>
+          <h1 style={{...styles.heroTitle, fontSize: isMobile ? "26px" : "42px"}}>
             Support your child’s online safety with simple weekly guidance.
           </h1>
 
@@ -41,17 +43,13 @@ export default function LoginPage() {
             guided reflection at your own pace.
           </p>
 
-          <div style={styles.illustrationCard}>
-            <div>
-              <h3 style={styles.illustrationHeading}>
-                Built for clarity, trust, and support
-              </h3>
-              <p style={styles.illustrationText}>
-                This platform helps parents strengthen knowledge, confidence,
-                and communication around adolescents’ online privacy and
-                security.
-              </p>
-            </div>
+          <div style={{...styles.illustrationCard, gridTemplateColumns: isMobile ? "1fr" : "1.2fr 0.8fr"}}>
+            <ul style={styles.illustrationList}>
+              <li>Help children stay safer online</li>
+              <li>Respond calmly and supportively Build</li>
+              <li>confidence in supporting children</li>
+              <li>Strengthen parent-child</li>
+            </ul>
 
             <svg
               viewBox="0 0 320 240"
@@ -80,7 +78,7 @@ export default function LoginPage() {
           </div>
 
           <div style={styles.imageStripSection}>
-            <div style={styles.imageStrip}>
+            <div style={{...styles.imageStrip, gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)"}}>
               {[
                 "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=900&q=80",
                 "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80",
@@ -96,7 +94,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div style={styles.auth}>
+        <div style={{...styles.auth, padding: isMobile ? "20px 16px" : "44px 36px"}}>
           <div style={styles.authCard}>
             <div style={styles.topNote}>
               Secure access for registered study participants
@@ -150,20 +148,6 @@ export default function LoginPage() {
                 </p>
               )}
 
-              <div style={styles.trustRow}>
-                <div style={styles.trustItem}>
-                  <strong>Secure login</strong>
-                  <span>Protected participant access</span>
-                </div>
-                <div style={styles.trustItem}>
-                  <strong>Mobile friendly</strong>
-                  <span>Works on phone, tablet, and desktop</span>
-                </div>
-                <div style={styles.trustItem}>
-                  <strong>Research study</strong>
-                  <span>Designed for monitored trial delivery</span>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -319,16 +303,15 @@ const styles = {
     alignItems: "center",
     marginBottom: "28px",
   },
-  illustrationHeading: {
-    margin: "0 0 8px",
-    fontSize: "22px",
-    color: "#1f2937",
-  },
-  illustrationText: {
+  illustrationList: {
     margin: 0,
-    color: "#6b7280",
-    lineHeight: "1.55",
+    padding: "0 0 0 18px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px",
+    color: "#374151",
     fontSize: "15px",
+    lineHeight: "1.55",
   },
   art: {
     width: "100%",

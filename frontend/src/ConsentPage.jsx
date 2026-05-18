@@ -56,12 +56,16 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     background: "#f5f9fc",
+    padding: "16px",
+    boxSizing: "border-box",
   },
   card: {
     background: "#fff",
     padding: "30px",
     borderRadius: "16px",
-    width: "400px",
+    width: "100%",
+    maxWidth: "400px",
+    boxSizing: "border-box",
     boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
   },
   title: {

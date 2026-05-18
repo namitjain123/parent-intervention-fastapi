@@ -5,6 +5,7 @@ import axios from "axios";
 import { apiRequest } from "./authConfig";
 
 import { API_BASE_URL } from "./config";
+import { useIsMobile } from "./useIsMobile";
 
 const episodeImages = {
   1: "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=1400&q=80",
@@ -21,6 +22,7 @@ export default function EpisodePage() {
   const { episodeNumber } = useParams();
   const navigate = useNavigate();
   const { instance, accounts } = useMsal();
+  const isMobile = useIsMobile();
 
   const [episode, setEpisode] = useState(null);
   const [showTranscript, setShowTranscript] = useState(true);
@@ -33,6 +35,8 @@ export default function EpisodePage() {
 
   const [savingReaction, setSavingReaction] = useState(false);
   const [reactionPopup, setReactionPopup] = useState(null);
+  const [localReactions, setLocalReactions] = useState([]);
+  const [audioDuration, setAudioDuration] = useState(0);
 
   const startedAtRef = useRef(null);
   const audioRef = useRef(null);
@@ -135,6 +139,7 @@ export default function EpisodePage() {
       const currentTime = audio ? Math.floor(audio.currentTime) : 0;
 
       showReactionPopup(emoji, currentTime);
+      setLocalReactions((prev) => [...prev, { emoji, timestamp: currentTime }]);
       setSavingReaction(true);
 
       const token = await getApiToken();
@@ -215,7 +220,7 @@ export default function EpisodePage() {
     episode.image_url || episodeImages[Number(episodeNumber)] || episodeImages[2];
 
   return (
-    <div style={styles.page}>
+    <div style={{...styles.page, padding: isMobile ? "12px" : "28px"}}>
       <div style={styles.container}>
         <div style={styles.topBar}>
           <button style={styles.backButton} onClick={() => navigate("/")}>
@@ -226,18 +231,20 @@ export default function EpisodePage() {
         </div>
 
         <div style={styles.headerCard}>
-          <div style={styles.headerImageArea}>
-            <img
-              src={headerImage}
-              alt={`Episode ${episodeNumber}`}
-              style={styles.headerImage}
-            />
-            <div style={styles.headerImageFade}></div>
-          </div>
+          {!isMobile && (
+            <div style={styles.headerImageArea}>
+              <img
+                src={headerImage}
+                alt={`Episode ${episodeNumber}`}
+                style={styles.headerImage}
+              />
+              <div style={styles.headerImageFade}></div>
+            </div>
+          )}
 
-          <div style={styles.headerText}>
+          <div style={{...styles.headerText, width: isMobile ? "100%" : "58%"}}>
             <div style={styles.tag}>Weekly learning episode</div>
-            <h1 style={styles.title}>{episode.title}</h1>
+            <h1 style={{...styles.title, fontSize: isMobile ? "24px" : "40px"}}>{episode.title}</h1>
 
             {episode.description ? (
               <p style={styles.description}>{episode.description}</p>
@@ -248,11 +255,11 @@ export default function EpisodePage() {
         <div
           style={{
             ...styles.layout,
-            gridTemplateColumns: showTranscript ? "0.95fr 1.4fr" : "1fr",
+            gridTemplateColumns: isMobile || !showTranscript ? "1fr" : "0.95fr 1.4fr",
           }}
         >
           {showTranscript && (
-            <div style={styles.transcriptPanel}>
+            <div style={{...styles.transcriptPanel, order: isMobile ? 1 : 0, position: isMobile ? "static" : "sticky"}}>
               <div style={styles.transcriptHeader}>
                 <h3 style={styles.transcriptTitle}>Transcript</h3>
                 <p style={styles.transcriptSub}>
@@ -267,13 +274,6 @@ export default function EpisodePage() {
   {fullTranscript.map((seg, idx) => (
     <div
       key={idx}
-      onClick={() => {
-        const audio = audioRef.current;
-        if (audio) {
-          audio.currentTime = seg.startSec;
-          audio.play();
-        }
-      }}
       style={{
         ...styles.transcriptBlock,
         ...(idx === currentIndex ? styles.transcriptBlockActive : {}),
@@ -290,7 +290,7 @@ export default function EpisodePage() {
             </div>
           )}
 
-          <div style={styles.mainColumn}>
+          <div style={{...styles.mainColumn, order: isMobile ? 0 : 1}}>
             <div style={styles.audioCard}>
               <div style={styles.sectionHeader}>
                 <div>
@@ -309,7 +309,29 @@ export default function EpisodePage() {
               </div>
 
               <div style={styles.audioWrapper}>
-                <audio ref={audioRef} controls style={styles.audioPlayer}>
+                {localReactions.length > 0 && audioDuration > 0 && (
+                  <div style={styles.emojiTimeline}>
+                    <div style={styles.emojiTimelineLine} />
+                    {localReactions.map((r, i) => (
+                      <span
+                        key={i}
+                        title={`${Math.floor(r.timestamp / 60)}:${String(r.timestamp % 60).padStart(2, "0")}`}
+                        style={{
+                          ...styles.emojiTimelineMarker,
+                          left: `${Math.min((r.timestamp / audioDuration) * 100, 97)}%`,
+                        }}
+                      >
+                        {r.emoji}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <audio
+                  ref={audioRef}
+                  controls
+                  style={styles.audioPlayer}
+                  onLoadedMetadata={(e) => setAudioDuration(e.target.duration)}
+                >
                   <source src={episode.audio_url} type="audio/mpeg" />
                   Your browser does not support the audio element.
                 </audio>
@@ -594,6 +616,30 @@ const styles = {
   audioPlayer: {
     width: "100%",
   },
+  emojiTimeline: {
+    position: "relative",
+    height: "36px",
+    marginBottom: "8px",
+  },
+  emojiTimelineLine: {
+    position: "absolute",
+    top: "50%",
+    left: 0,
+    right: 0,
+    height: "2px",
+    background: "#dce9f5",
+    borderRadius: "2px",
+    transform: "translateY(-50%)",
+  },
+  emojiTimelineMarker: {
+    position: "absolute",
+    top: "50%",
+    transform: "translate(-50%, -50%)",
+    fontSize: "20px",
+    lineHeight: 1,
+    cursor: "default",
+    userSelect: "none",
+  },
   reactionCard: {
     marginTop: "16px",
     background: "#f8fbfe",
@@ -744,7 +790,6 @@ const styles = {
 },
 
 transcriptBlock: {
-  cursor: "pointer",
   padding: "8px 10px",
   borderRadius: "8px",
   lineHeight: "1.6",

@@ -5,6 +5,7 @@ import LoginPage from "./LoginPage";
 import { useEffect, useState } from "react";
 import "./App.css";
 import { API_BASE_URL } from "./config";
+import { useIsMobile } from "./useIsMobile";
 const episodeImages = {
   1: "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=1200&q=80",
   2: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80",
@@ -19,6 +20,7 @@ const episodeImages = {
 export default function App() {
   const { instance, accounts, inProgress } = useMsal();
   const isAuthenticated = useIsAuthenticated();
+  const isMobile = useIsMobile();
 
   const [token, setToken] = useState("");
   const [dashboard, setDashboard] = useState(null);
@@ -175,11 +177,11 @@ export default function App() {
     dashboard.all_episodes_completed ?? dashboard.current_episode > 8;
 
   return (
-    <div style={styles.page}>
+    <div style={{...styles.page, padding: isMobile ? "12px" : "28px"}}>
       <div style={styles.container}>
         <div style={styles.topBar}>
           <div>
-            <div style={styles.brand}>Parenting Platform</div>
+            <div style={{...styles.brand, fontSize: isMobile ? "20px" : "30px"}}>Parenting Platform</div>
             <div style={styles.brandSub}>Parenting Intervention Program</div>
           </div>
 
@@ -192,11 +194,11 @@ export default function App() {
         </div>
 
         {!dashboard.pre_questionnaire_completed ? (
-          <div style={styles.heroWrapper}>
+          <div style={{...styles.heroWrapper, gridTemplateColumns: isMobile ? "1fr" : "1.2fr 0.8fr"}}>
             <div style={styles.leftPanel}>
               <div style={styles.tag}>Step 1 of the program</div>
 
-              <h1 style={styles.title}>
+              <h1 style={{...styles.title, fontSize: isMobile ? "24px" : "42px"}}>
                 Before you begin, please complete the pre-questionnaire
               </h1>
 
@@ -360,16 +362,18 @@ export default function App() {
                       ...(isCompleted ? styles.episodeCardCompleted : {}),
                     }}
                   >
-                    <div style={styles.episodeImageArea}>
-                      <img
-                        src={imageSrc}
-                        alt={`Episode ${ep.episode_number}`}
-                        style={styles.episodeImage}
-                      />
-                      <div style={styles.episodeImageFade}></div>
-                    </div>
+                    {!isMobile && (
+                      <div style={styles.episodeImageArea}>
+                        <img
+                          src={imageSrc}
+                          alt={`Episode ${ep.episode_number}`}
+                          style={styles.episodeImage}
+                        />
+                        <div style={styles.episodeImageFade}></div>
+                      </div>
+                    )}
 
-                    <div style={styles.episodeContent}>
+                    <div style={{...styles.episodeContent, width: isMobile ? "100%" : "58%"}}>
                       <div style={styles.episodeTopRow}>
                         <div style={styles.episodeNumberBadge}>
                           Episode {ep.episode_number}
