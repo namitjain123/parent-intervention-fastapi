@@ -19,8 +19,13 @@ class User(Base):
     pre_questionnaire_completed = Column(Boolean, default=False)
     post_questionnaire_completed = Column(Boolean, default=False)
 
-    # 🔥 NEW: Class A / B
+    # 🔥 NEW: Class A / B  (derived flow: "A" = normal, "B" = delayed)
     user_class = Column(String, nullable=True)  # "A" or "B"
+
+    # 🔥 NEW: grade + teacher captured from the pre-questionnaire
+    grade = Column(String, nullable=True)         # "7" | "8" | "9"
+    teacher_code = Column(String, nullable=True)  # raw teacher value from REDCap
+    teacher_name = Column(String, nullable=True)  # resolved teacher name
 
     # Episode tracking
     current_episode = Column(Integer, default=0)

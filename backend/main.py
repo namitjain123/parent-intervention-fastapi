@@ -21,6 +21,17 @@ from utils.email_service_classflow import (
     send_class_b_lock_email,
     send_class_b_unlock_email,
 )
+from utils.reminder_service import (
+    get_users_needing_form_reminder,
+    get_users_needing_25day_progress_reminder,
+    mark_reminder_sent,
+    mark_midway_reminder_sent,
+)
+from utils.email_service import (
+    send_reminder_email,
+    send_25day_progress_reminder,
+)
+from class_flow_config import resolve_flow
 
 from models import (
     User,
@@ -62,6 +73,38 @@ def scheduled_process_delayed_unlocks():
         db.close()
 
 
+def scheduled_send_inactivity_reminders():
+    db = SessionLocal()
+    try:
+        users = get_users_needing_form_reminder(db)
+        print(f"[Reminder] Found {len(users)} users needing inactivity reminders")
+        for user in users:
+            try:
+                send_reminder_email(user.email, user.name)
+                print(f"[Reminder] Inactivity email sent to {user.email}")
+            except Exception as e:
+                print(f"[Reminder] Inactivity email failed for {user.email}: {e}")
+            mark_reminder_sent(user, db)
+    finally:
+        db.close()
+
+
+def scheduled_send_25day_reminders():
+    db = SessionLocal()
+    try:
+        users = get_users_needing_25day_progress_reminder(db)
+        print(f"[Reminder] Found {len(users)} users needing 25-day progress reminders")
+        for user in users:
+            try:
+                send_25day_progress_reminder(user.email, user.name)
+                print(f"[Reminder] 25-day email sent to {user.email}")
+            except Exception as e:
+                print(f"[Reminder] 25-day email failed for {user.email}: {e}")
+            mark_midway_reminder_sent(user, db)
+    finally:
+        db.close()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     scheduler.add_job(
@@ -69,6 +112,21 @@ async def lifespan(app: FastAPI):
         "interval",
         minutes=1,
         id="delayed_survey_unlock_job",
+        replace_existing=True,
+    )
+    # TODO: change minutes=10 to days=1 after testing
+    scheduler.add_job(
+        scheduled_send_inactivity_reminders,
+        "interval",
+        minutes=100,
+        id="inactivity_reminder_job",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        scheduled_send_25day_reminders,
+        "interval",
+        minutes=100,
+        id="25day_progress_reminder_job",
         replace_existing=True,
     )
     scheduler.start()
@@ -251,14 +309,6 @@ def process_delayed_survey_unlocks(db: Session):
     }
 
 
-# =====================================================
-# BASIC ROUTES
-# =====================================================
-
-@app.get("/test")
-def test():
-    return {"message": "Backend reachable"}
-
 
 @app.get("/me")
 def get_me(user=Depends(verify_token), db: Session = Depends(get_db)):
@@ -274,6 +324,8 @@ def get_me(user=Depends(verify_token), db: Session = Depends(get_db)):
         "post_questionnaire_completed": db_user.post_questionnaire_completed,
         "current_episode": db_user.current_episode,
         "user_class": db_user.user_class,
+        "grade": db_user.grade,
+        "teacher_name": db_user.teacher_name,
         "delayed_survey_unlocked": db_user.delayed_survey_unlocked,
         "delayed_survey_completed": db_user.delayed_survey_completed,
         "delayed_unlock_at": db_user.delayed_unlock_at,
@@ -326,6 +378,8 @@ def get_dashboard(user=Depends(verify_token), db: Session = Depends(get_db)):
         "current_episode": db_user.current_episode,
         "all_episodes_completed": all_episodes_completed,
         "user_class": db_user.user_class,
+        "grade": db_user.grade,
+        "teacher_name": db_user.teacher_name,
         "delayed_survey_unlocked": db_user.delayed_survey_unlocked,
         "delayed_survey_completed": db_user.delayed_survey_completed,
         "delayed_unlock_at": db_user.delayed_unlock_at,
@@ -357,23 +411,19 @@ def mark_prequestionnaire_complete(
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    if not data.user_class:
-        raise HTTPException(status_code=400, detail="user_class is required")
+    if not data.grade or not data.teacher:
+        raise HTTPException(status_code=400, detail="grade and teacher are required")
 
-    selected_class_raw = data.user_class.strip()
-
-    if selected_class_raw in ["A", "a", "Class 7-9", "Class 7–9"]:
-        selected_class = "A"
-    elif selected_class_raw in ["B", "b", "Class 9-10", "Class 9–10"]:
-        selected_class = "B"
-    else:
-        raise HTTPException(
-            status_code=400,
-            detail=f"user_class must be A or B, got {data.user_class}",
-        )
+    try:
+        selected_class, teacher_name = resolve_flow(data.grade, data.teacher)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     db_user.pre_questionnaire_completed = True
     db_user.user_class = selected_class
+    db_user.grade = data.grade.strip()
+    db_user.teacher_code = data.teacher.strip()
+    db_user.teacher_name = teacher_name
 
     if selected_class == "A":
         db_user.delayed_survey_unlocked = False
@@ -390,7 +440,7 @@ def mark_prequestionnaire_complete(
 
         db_user.delayed_survey_unlocked = False
         db_user.delayed_survey_completed = False
-        db_user.delayed_unlock_at = now + timedelta(days=30)
+        db_user.delayed_unlock_at = now + timedelta(minutes=1)
         db_user.current_episode = 0
 
         if not db_user.lock_email_sent_at:
@@ -409,6 +459,8 @@ def mark_prequestionnaire_complete(
     return {
         "message": "Pre-questionnaire marked complete",
         "user_class": db_user.user_class,
+        "grade": db_user.grade,
+        "teacher_name": db_user.teacher_name,
         "delayed_survey_unlocked": db_user.delayed_survey_unlocked,
         "delayed_survey_completed": db_user.delayed_survey_completed,
         "delayed_unlock_at": db_user.delayed_unlock_at,

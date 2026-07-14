@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from models import User, UserEpisodeProgress
+from models import User
 
 
 def get_users_needing_form_reminder(db):
@@ -21,26 +21,15 @@ def get_users_needing_form_reminder(db):
 
 def get_users_needing_25day_progress_reminder(db):
     now = datetime.now(timezone.utc)
-    progress_cutoff = now - timedelta(days=25)
+    progress_cutoff = now - timedelta(days=21)
 
-    candidate_users = db.query(User).filter(
+    users = db.query(User).filter(
         User.post_questionnaire_completed == False,
         User.created_at <= progress_cutoff,
         User.midway_reminder_sent_at == None
     ).all()
 
-    eligible_users = []
-
-    for user in candidate_users:
-        completed_count = db.query(UserEpisodeProgress).filter(
-            UserEpisodeProgress.user_id == user.id,
-            UserEpisodeProgress.completed == True
-        ).count()
-
-        if completed_count < 4:   # less than 50% of 8 episodes
-            eligible_users.append(user)
-
-    return eligible_users
+    return users
 
 
 def mark_reminder_sent(user, db):

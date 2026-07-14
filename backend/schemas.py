@@ -74,8 +74,10 @@ class DashboardOut(BaseModel):
 class CompletePreQRequest(BaseModel):
     participant_id: str
 
-    # 🔥 ADD THIS (VERY IMPORTANT)
-    user_class: str
+    # 🔥 grade (7/8/9) + teacher coded value from REDCap.
+    # The A/B flow is derived from these on the backend.
+    grade: str
+    teacher: str
 
 
 class EpisodeCompleteRequest(BaseModel):

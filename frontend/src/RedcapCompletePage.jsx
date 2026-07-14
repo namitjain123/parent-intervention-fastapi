@@ -11,33 +11,37 @@ export default function RedcapCompletePage() {
         const participantId =
           params.get("participant_id") || localStorage.getItem("participant_id");
 
-        const userClass =
-          params.get("user_class") || localStorage.getItem("user_class");
+        const grade = params.get("grade");
+        const teacher = params.get("teacher");
 
         console.log("participantId in redcap complete:", participantId);
-        console.log("userClass in redcap complete:", userClass);
+        console.log("grade in redcap complete:", grade);
+        console.log("teacher in redcap complete:", teacher);
 
-        if (!participantId || !userClass) {
+        if (!participantId || !grade || !teacher) {
           window.location.href = "/";
           return;
         }
 
         await axios.post(`${API_BASE_URL}/mark-prequestionnaire-complete`, {
           participant_id: participantId,
-          user_class: userClass,
+          grade,
+          teacher,
         });
 
         localStorage.removeItem("participant_id");
-        localStorage.removeItem("user_class");
 
         window.location.href = "/";
       } catch (error) {
         console.error("Error completing REDCap flow:", error);
+        const detail = error?.response?.data?.detail || error.message;
+        alert(`Pre-questionnaire completion failed: ${detail}\n\nCheck the browser console for details.`);
+        window.location.href = "/";
       }
     };
 
     run();
   }, []);
 
-  return <div style={{ padding: 40 }}>Loading...</div>;
+  return <div style={{ padding: 40 }}>Completing pre-questionnaire, please wait...</div>;
 }

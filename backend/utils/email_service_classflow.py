@@ -36,12 +36,13 @@ def send_email(to_email: str, subject: str, html_content: str):
 def send_class_b_lock_email(to_email: str):
     send_email(
         to_email,
-        "Your next survey will open soon",
+        "Reminder: Platform Episodes Will Open Soon",
         """
-        <h2>Your next survey is currently locked</h2>
-        <p>Thank you for completing the first questionnaire.</p>
-        <p>Your next survey will be available in about 10 minutes.</p>
-        <p>Please come back later and continue the program.</p>
+        <p>Dear Parent/Caregiver,</p>
+        <p>Thank you for completing the baseline survey.</p>
+        <p>The episodes are not open yet. They will begin in about one month, and we will email you when the first episode is ready.</p>
+        <p>Kind regards,</p>
+        <p>The Research Team</p>
         """
     )
 
@@ -50,10 +51,14 @@ def send_class_b_unlock_email(to_email: str):
        
         send_email(
             to_email,
-            "Your survey is now available",
+            "Reminder: Platform Episodes Are Now Open (28 days)",
             f"""
-            <h2>Your next survey is now open</h2>
-            <p>You can now return to the Parenting Platform and complete the next survey.</p>
+            <p>Dear Parent/Caregiver,</p>
+            <p>The study episodes are now open.</p>
+            <p>Please log in to the study platform and complete the episodes when you have time.</p>
             <p><a href="{FRONTEND_URL}">Open Parenting Platform</a></p>
+            <p>If you have any questions or have trouble accessing the platform, please contact the research team.</p>
+            <p>Kind regards,</p>
+            <p>The Research Team</p>
             """
         )

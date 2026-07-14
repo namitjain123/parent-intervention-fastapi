@@ -13,15 +13,19 @@ def send_reminder_email(to_email: str, user_name: str):
             "to": [{"address": to_email}]
         },
         "content": {
-            "subject": "Reminder to continue your Parent Intervention program",
+            "subject": "Reminder: Please Continue on the Platform (7 days)",
             "plainText": f"""
-Hi {user_name},
+Dear Parent/Caregiver,
 
-This is a friendly reminder to continue your Parent Intervention program.
+Thank you for signing up for our platform.
 
-We noticed that you have not completed the next required step yet. Please log in and continue when convenient.
+We noticed that there has been no activity on your account for the past seven days. Please continue when you have time.
 
-Thank you.
+If you have any questions or trouble accessing the study, please contact the research team.
+
+Kind regards,
+
+The Research Team
 """
         }
     }
@@ -41,15 +45,17 @@ def send_25day_progress_reminder(to_email: str, user_name: str):
             "to": [{"address": to_email}]
         },
         "content": {
-            "subject": "Reminder to stay on track with your episodes",
+            "subject": "Reminder: Platform Will Close in One Week (21 days)",
             "plainText": f"""
-Hi {user_name},
+Dear Parent/Caregiver,
 
-This is a friendly reminder to continue your Parent Intervention program.
+We noticed that the episodes have not yet been completed. Please complete them as soon as possible. The study platform will automatically close in one week, after which you will no longer be able to access the episodes.
 
-It has been 25 days since you started, and you have completed less than 50% of the episodes so far. Please log in and continue when convenient.
+If you have any questions or have trouble accessing the platform, please contact the research team.
 
-Thank you.
+Kind regards,
+
+The Research Team
 """
         }
     }

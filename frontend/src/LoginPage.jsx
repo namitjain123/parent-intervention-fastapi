@@ -18,8 +18,8 @@ export default function LoginPage() {
     instance.loginRedirect(loginRequest);
   };
 
-  const openRedcapConsent = () => {
-    window.open(import.meta.env.VITE_REDCAP_CONSENT_URL, "_blank");
+  const openConsentForm = () => {
+    window.open("/online-consent.pdf", "_blank");
   };
 
   if (isAuthenticated) return null;
@@ -78,18 +78,11 @@ export default function LoginPage() {
           </div>
 
           <div style={styles.imageStripSection}>
-            <div style={{...styles.imageStrip, gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)"}}>
-              {[
-                "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=900&q=80",
-                "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80",
-                "https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=900&q=80",
-                "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80",
-              ].map((src, index) => (
-                <div style={styles.imageCard} key={index}>
-                  <img src={src} alt="Parenting support" style={styles.stripImage} />
-                  <div style={styles.imageOverlay}></div>
-                </div>
-              ))}
+            <div style={{...styles.imageStrip, gridTemplateColumns: "1fr"}}>
+              <div style={styles.imageCard}>
+                <img src="/episode%206.jpg" alt="Parenting support" style={styles.stripImage} />
+                <div style={styles.imageOverlay}></div>
+              </div>
             </div>
           </div>
         </div>
@@ -97,7 +90,7 @@ export default function LoginPage() {
         <div style={{...styles.auth, padding: isMobile ? "20px 16px" : "44px 36px"}}>
           <div style={styles.authCard}>
             <div style={styles.topNote}>
-              Secure access for registered study participants
+              
             </div>
 
             <div style={styles.panel}>
@@ -116,9 +109,9 @@ export default function LoginPage() {
                     onChange={(e) => setRedcapConsent(e.target.checked)}
                   />
                   <span>
-                    I have completed the REDCap consent form.{" "}
-                    <button type="button" style={styles.linkButton} onClick={openRedcapConsent}>
-                      Open REDCap
+                    Open and review the{" "}
+                    <button type="button" style={styles.linkButton} onClick={openConsentForm}>
+                      participation letter
                     </button>
                   </span>
                 </label>
@@ -126,13 +119,13 @@ export default function LoginPage() {
                 <div style={styles.checkboxRow}>
                   <input type="checkbox" checked={termsConsent} readOnly />
                   <span>
-                    I agree to the{" "}
+                    I have read the{" "}
                     <button
                       type="button"
                       style={styles.linkButton}
                       onClick={() => setShowConsentModal(true)}
                     >
-                      Consent Form & Terms
+                      consent form
                     </button>
                   </span>
                 </div>
@@ -148,60 +141,75 @@ export default function LoginPage() {
                 </p>
               )}
 
+              <p style={styles.qaRow}>
+                Have a question?{" "}
+                <a
+                  href="/qa.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={styles.linkButton}
+                >
+                  Read our Q&amp;A
+                </a>
+              </p>
+
             </div>
           </div>
         </div>
       </div>
 
       {showConsentModal && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalCard}>
-            <h2 style={styles.modalTitle}>Consent Form – Survey</h2>
+        <div style={styles.modalOverlay} onClick={() => setShowConsentModal(false)}>
+          <div style={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h2 style={styles.modalTitle}>Consent Form – Survey</h2>
+              <button
+                type="button"
+                style={styles.modalClose}
+                onClick={() => setShowConsentModal(false)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
 
             <div style={styles.modalContent}>
               <h3 style={styles.modalSubTitle}>Declaration by the participant</h3>
 
-              <p>
-                I have read the Participant Information Sheet, or someone has read it to me
-                in a language that I understand. I have had an opportunity to ask questions,
-                and I am satisfied with the answers I have received.
-              </p>
-
-              <p>
-                I understand the purposes, study tasks and risks of the research described
-                in the study and understand that I am free to withdraw at any time during the
-                study, and withdrawal will not affect my relationship with the research team members.
-              </p>
-
-              <p>
-                I understand I am agreeing to participate in the online survey as outlined
-                in the Participant Information Sheet.
-              </p>
-
-              <p>
-                I understand that data analysis will be conducted using research software tools
-                such as statistical software, qualitative analysis programs, and AI-assisted tools
-                for analysing patterns and themes in de-identified data only, within the university’s secure systems.
-              </p>
-
-              <p>
-                I may exit the survey at any time by closing the survey window on my device.
-                There is no obligation to answer all questions or finish the survey.
-              </p>
-
-              <p>
-                If I exit the survey before submitting my responses, my responses will not be
-                included in the research.
-              </p>
-
-              <p>
-                I understand that I can withdraw from the study at any time before submitting the survey.
-                Once my responses are submitted, they cannot be withdrawn because they are collected
-                anonymously and do not contain identifying information.
-              </p>
+              <ul style={styles.consentList}>
+                <li>
+                  I have read the Participant Information Sheet, or someone has read it to me in a
+                  language that I understand. I have had an opportunity to ask questions, and I am
+                  satisfied with the answers I have received. I understand the purposes, study tasks
+                  and risks of the research described in the study and understand that I am free to
+                  withdraw at any time during the study, and withdrawal will not affect my
+                  relationship with the research team members.
+                </li>
+                <li>
+                  I understand I am agreeing to participate in the online survey as outlined in the
+                  Participant Information Sheet.
+                </li>
+                <li>
+                  I understand that data analysis will be conducted using research software tools
+                  (e.g. statistical software, qualitative analysis programs, and AI-assisted tools)
+                  for the purposes of analysing patterns and themes in de-identified data only,
+                  within the university’s secure systems.
+                </li>
+                <li>
+                  I may exit the survey at any time by closing the survey ‘window’ on my device and
+                  there is no obligation to answer all questions or finish the survey. If I exit the
+                  survey before submitting my responses, my responses will not be included in the
+                  research.
+                </li>
+                <li>
+                  I understand that I can withdraw from the study at any time before submitting the
+                  survey. Once my responses are submitted, they cannot be withdrawn because they are
+                  collected anonymously and do not contain identifying information.
+                </li>
+              </ul>
 
               <p style={styles.boldText}>
-                Clicking “Yes, I agree to participate” below means I consent to take part in this study.
+                Clicking ‘Yes, I agree to participate’ below, I consent to take part in this study.
               </p>
             </div>
 
@@ -441,6 +449,12 @@ const styles = {
     lineHeight: "1.5",
     textAlign: "center",
   },
+  qaRow: {
+    fontSize: "14px",
+    marginTop: "16px",
+    color: "#334155",
+    textAlign: "center",
+  },
   trustRow: {
     display: "grid",
     gridTemplateColumns: "repeat(3, 1fr)",
@@ -480,8 +494,32 @@ const styles = {
     maxHeight: "84vh",
     overflowY: "auto",
   },
+  modalHeader: {
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: "12px",
+    marginBottom: "10px",
+  },
+  modalClose: {
+    border: "none",
+    background: "transparent",
+    fontSize: "28px",
+    lineHeight: "1",
+    color: "#64748b",
+    cursor: "pointer",
+    padding: "0 6px",
+    flexShrink: 0,
+  },
+  consentList: {
+    margin: "0 0 14px",
+    padding: "0 0 0 20px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+  },
   modalTitle: {
-    margin: "0 0 10px",
+    margin: 0,
     fontSize: "26px",
     color: "#0f172a",
   },

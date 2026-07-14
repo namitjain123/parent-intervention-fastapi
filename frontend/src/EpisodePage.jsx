@@ -446,11 +446,35 @@ export default function EpisodePage() {
           </div>
         </div>
       </div>
+
+      <a
+        href="/qa.pdf"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={styles.qaFab}
+        title="Read our Q&A"
+      >
+        Q&amp;A
+      </a>
     </div>
   );
 }
 
 const styles = {
+  qaFab: {
+    position: "fixed",
+    right: "24px",
+    bottom: "24px",
+    zIndex: 1000,
+    background: "#356dcb",
+    color: "#ffffff",
+    textDecoration: "none",
+    fontSize: "15px",
+    fontWeight: "700",
+    padding: "12px 20px",
+    borderRadius: "999px",
+    boxShadow: "0 10px 24px rgba(53,109,203,0.35)",
+  },
   page: {
     minHeight: "100vh",
     background: "linear-gradient(180deg, #eef5fb 0%, #f8fbfd 100%)",

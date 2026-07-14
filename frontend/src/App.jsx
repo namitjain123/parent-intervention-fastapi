@@ -294,40 +294,25 @@ export default function App() {
             </div>
           </div>
         ) : dashboard.delayed_survey_locked ? (
-  <div className="action-card waiting-card">
-    <div className="card-badge">Locked</div>
-
-    <h2 className="card-title">Your next survey is currently locked</h2>
-
-    <p className="card-text">
-      Thank you for completing the first questionnaire. Your next survey will
-      become available shortly. Please check your email and return later.
-    </p>
-
-    <div className="note-box">
-      Your delayed survey unlock time is:{" "}
-      {dashboard.delayed_unlock_at
-        ? new Date(dashboard.delayed_unlock_at).toLocaleString()
-        : "Not available"}
-    </div>
+  <div style={styles.comingSoonWrap}>
+    <h1 style={styles.comingSoonText}>Coming soon....</h1>
   </div>
 ) : dashboard.show_delayed_survey ? (
   <div className="action-card waiting-card">
-    <div className="card-badge">Required</div>
+    <div className="card-badge"></div>
+<h2 className="card-title">
+      Episodes will be available after completing this survey.
+    </h2>
+    <p className="card-text">Your next survey is now available</p>
 
-    <h2 className="card-title">Your next survey is now available</h2>
-
-    <p className="card-text">
-      Please complete this delayed survey before accessing the learning episodes.
-    </p>
+  
 
     <button className="primary-button" onClick={openDelayedQuestionnaire}>
-      Start Delayed Survey
+      Start Survey
     </button>
 
     <div className="note-box">
-      After completing this survey, you will return to the platform and Episode 1
-      will be unlocked.
+
     </div>
   </div>
 ) : (
@@ -490,11 +475,48 @@ export default function App() {
           </div>
         )}
       </div>
+
+      <a
+        href="/qa.pdf"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={styles.qaFab}
+        title="Read our Q&A"
+      >
+        Q&amp;A
+      </a>
     </div>
   );
 }
 
 const styles = {
+  qaFab: {
+    position: "fixed",
+    right: "24px",
+    bottom: "24px",
+    zIndex: 1000,
+    background: "#356dcb",
+    color: "#ffffff",
+    textDecoration: "none",
+    fontSize: "15px",
+    fontWeight: "700",
+    padding: "12px 20px",
+    borderRadius: "999px",
+    boxShadow: "0 10px 24px rgba(53,109,203,0.35)",
+  },
+  comingSoonWrap: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: "60vh",
+  },
+  comingSoonText: {
+    margin: 0,
+    fontSize: "44px",
+    fontWeight: "700",
+    color: "#0f172a",
+    textAlign: "center",
+  },
   loadingPage: {
     minHeight: "100vh",
     display: "flex",
