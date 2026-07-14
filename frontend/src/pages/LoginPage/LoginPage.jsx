@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMsal, useIsAuthenticated } from "@azure/msal-react";
 import { loginRequest } from "../../config/authConfig";
 import { useIsMobile } from "../../hooks/useIsMobile";
+import styles from "./LoginPage.module.css";
 
 export default function LoginPage() {
   const { instance } = useMsal();
@@ -25,26 +26,41 @@ export default function LoginPage() {
   if (isAuthenticated) return null;
 
   return (
-    <div style={{...styles.page, padding: isMobile ? "12px" : "24px", alignItems: isMobile ? "flex-start" : "center"}}>
-      <div style={{...styles.shell, gridTemplateColumns: isMobile ? "1fr" : "1.1fr 0.9fr"}}>
-        <div style={{...styles.hero, padding: isMobile ? "32px 20px" : "56px 52px"}}>
-          <div style={styles.brand}>
-            <span style={styles.brandDot}></span>
+    <div
+      className={styles.page}
+      style={{ padding: isMobile ? "12px" : "24px", alignItems: isMobile ? "flex-start" : "center" }}
+    >
+      <div
+        className={styles.shell}
+        style={{ gridTemplateColumns: isMobile ? "1fr" : "1.1fr 0.9fr" }}
+      >
+        <div
+          className={styles.hero}
+          style={{ padding: isMobile ? "32px 20px" : "56px 52px" }}
+        >
+          <div className={styles.brand}>
+            <span className={styles.brandDot}></span>
             Parenting Intervention Platform
           </div>
 
-          <h1 style={{...styles.heroTitle, fontSize: isMobile ? "26px" : "42px"}}>
+          <h1
+            className={styles.heroTitle}
+            style={{ fontSize: isMobile ? "26px" : "42px" }}
+          >
             Support your child’s online safety with simple weekly guidance.
           </h1>
 
-          <p style={styles.lead}>
+          <p className={styles.lead}>
             A secure research platform for Australian parents and caregivers of
             adolescents. Learn through short episodes, practical activities, and
             guided reflection at your own pace.
           </p>
 
-          <div style={{...styles.illustrationCard, gridTemplateColumns: isMobile ? "1fr" : "1.2fr 0.8fr"}}>
-            <ul style={styles.illustrationList}>
+          <div
+            className={styles.illustrationCard}
+            style={{ gridTemplateColumns: isMobile ? "1fr" : "1.2fr 0.8fr" }}
+          >
+            <ul className={styles.illustrationList}>
               <li>Help children stay safer online</li>
               <li>Respond calmly and supportively Build</li>
               <li>confidence in supporting children</li>
@@ -54,7 +70,7 @@ export default function LoginPage() {
             <svg
               viewBox="0 0 320 240"
               xmlns="http://www.w3.org/2000/svg"
-              style={styles.art}
+              className={styles.art}
               aria-label="Parent and child illustration"
             >
               <rect width="320" height="240" rx="24" fill="#edf6ff" />
@@ -77,32 +93,35 @@ export default function LoginPage() {
             </svg>
           </div>
 
-          <div style={styles.imageStripSection}>
-            <div style={{...styles.imageStrip, gridTemplateColumns: "1fr"}}>
-              <div style={styles.imageCard}>
-                <img src="/episode%206.jpg" alt="Parenting support" style={styles.stripImage} />
-                <div style={styles.imageOverlay}></div>
+          <div className={styles.imageStripSection}>
+            <div className={styles.imageStrip}>
+              <div className={styles.imageCard}>
+                <img src="/episode%206.jpg" alt="Parenting support" className={styles.stripImage} />
+                <div className={styles.imageOverlay}></div>
               </div>
             </div>
           </div>
         </div>
 
-        <div style={{...styles.auth, padding: isMobile ? "20px 16px" : "44px 36px"}}>
-          <div style={styles.authCard}>
-            <div style={styles.topNote}>
-              
+        <div
+          className={styles.auth}
+          style={{ padding: isMobile ? "20px 16px" : "44px 36px" }}
+        >
+          <div className={styles.authCard}>
+            <div className={styles.topNote}>
+
             </div>
 
-            <div style={styles.panel}>
-              <h2 style={styles.panelTitle}>Welcome</h2>
+            <div className={styles.panel}>
+              <h2 className={styles.panelTitle}>Welcome</h2>
 
-              <div style={styles.secureBanner}>
-                <span style={styles.secureIcon}>🔒</span>
+              <div className={styles.secureBanner}>
+                <span className={styles.secureIcon}>🔒</span>
                 Your account and study data are protected with secure authentication.
               </div>
 
-              <div style={styles.checkboxBox}>
-                <label style={styles.checkboxRow}>
+              <div className={styles.checkboxBox}>
+                <label className={styles.checkboxRow}>
                   <input
                     type="checkbox"
                     checked={redcapConsent}
@@ -110,19 +129,19 @@ export default function LoginPage() {
                   />
                   <span>
                     Open and review the{" "}
-                    <button type="button" style={styles.linkButton} onClick={openConsentForm}>
+                    <button type="button" className={styles.linkButton} onClick={openConsentForm}>
                       participation letter
                     </button>
                   </span>
                 </label>
 
-                <div style={styles.checkboxRow}>
+                <div className={styles.checkboxRow}>
                   <input type="checkbox" checked={termsConsent} readOnly />
                   <span>
                     I have read the{" "}
                     <button
                       type="button"
-                      style={styles.linkButton}
+                      className={styles.linkButton}
                       onClick={() => setShowConsentModal(true)}
                     >
                       consent form
@@ -132,22 +151,22 @@ export default function LoginPage() {
               </div>
 
               {canLogin ? (
-                <button style={styles.primaryBtn} onClick={handleLogin}>
+                <button className={styles.primaryBtn} onClick={handleLogin}>
                   Log in
                 </button>
               ) : (
-                <p style={styles.note}>
+                <p className={styles.note}>
                   Please complete both consent steps to continue.
                 </p>
               )}
 
-              <p style={styles.qaRow}>
+              <p className={styles.qaRow}>
                 Have a question?{" "}
                 <a
                   href="/qa.pdf"
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={styles.linkButton}
+                  className={styles.linkButton}
                 >
                   Read our Q&amp;A
                 </a>
@@ -159,13 +178,13 @@ export default function LoginPage() {
       </div>
 
       {showConsentModal && (
-        <div style={styles.modalOverlay} onClick={() => setShowConsentModal(false)}>
-          <div style={styles.modalCard} onClick={(e) => e.stopPropagation()}>
-            <div style={styles.modalHeader}>
-              <h2 style={styles.modalTitle}>Consent Form – Survey</h2>
+        <div className={styles.modalOverlay} onClick={() => setShowConsentModal(false)}>
+          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>Consent Form – Survey</h2>
               <button
                 type="button"
-                style={styles.modalClose}
+                className={styles.modalClose}
                 onClick={() => setShowConsentModal(false)}
                 aria-label="Close"
               >
@@ -173,10 +192,10 @@ export default function LoginPage() {
               </button>
             </div>
 
-            <div style={styles.modalContent}>
-              <h3 style={styles.modalSubTitle}>Declaration by the participant</h3>
+            <div className={styles.modalContent}>
+              <h3 className={styles.modalSubTitle}>Declaration by the participant</h3>
 
-              <ul style={styles.consentList}>
+              <ul className={styles.consentList}>
                 <li>
                   I have read the Participant Information Sheet, or someone has read it to me in a
                   language that I understand. I have had an opportunity to ask questions, and I am
@@ -208,15 +227,15 @@ export default function LoginPage() {
                 </li>
               </ul>
 
-              <p style={styles.boldText}>
+              <p className={styles.boldText}>
                 Clicking ‘Yes, I agree to participate’ below, I consent to take part in this study.
               </p>
             </div>
 
-            <div style={styles.modalActions}>
+            <div className={styles.modalActions}>
               <button
                 type="button"
-                style={styles.secondaryBtn}
+                className={styles.secondaryBtn}
                 onClick={() => setShowConsentModal(false)}
               >
                 Cancel
@@ -224,7 +243,7 @@ export default function LoginPage() {
 
               <button
                 type="button"
-                style={styles.modalPrimaryBtn}
+                className={styles.modalPrimaryBtn}
                 onClick={() => {
                   setTermsConsent(true);
                   setShowConsentModal(false);
@@ -239,327 +258,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-const styles = {
-  page: {
-    minHeight: "100vh",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "24px",
-    background: "linear-gradient(180deg, #eef5fb 0%, #f8fbfd 100%)",
-    fontFamily: "Arial, Helvetica, sans-serif",
-    boxSizing: "border-box",
-  },
-  shell: {
-    width: "100%",
-    maxWidth: "1220px",
-    background: "#ffffff",
-    borderRadius: "28px",
-    boxShadow: "0 12px 32px rgba(31, 41, 55, 0.12)",
-    overflow: "hidden",
-    border: "1px solid #eaf0f6",
-    display: "grid",
-    gridTemplateColumns: "1.1fr 0.9fr",
-  },
-  hero: {
-    padding: "56px 52px",
-    background:
-      "radial-gradient(circle at top left, rgba(95,184,143,0.18), transparent 28%), radial-gradient(circle at bottom right, rgba(53,109,203,0.14), transparent 30%), linear-gradient(180deg, #f6fbff 0%, #eef6fb 100%)",
-  },
-  brand: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "10px",
-    background: "rgba(255,255,255,0.8)",
-    border: "1px solid #d7e4f0",
-    padding: "8px 14px",
-    borderRadius: "999px",
-    fontSize: "14px",
-    color: "#2858a6",
-    fontWeight: "bold",
-  },
-  brandDot: {
-    width: "10px",
-    height: "10px",
-    borderRadius: "50%",
-    background: "#5fb88f",
-    display: "inline-block",
-  },
-  heroTitle: {
-    fontSize: "42px",
-    lineHeight: "1.16",
-    margin: "24px 0 16px",
-    maxWidth: "600px",
-    color: "#1f2937",
-  },
-  lead: {
-    fontSize: "18px",
-    lineHeight: "1.6",
-    color: "#6b7280",
-    maxWidth: "620px",
-    marginBottom: "28px",
-  },
-  illustrationCard: {
-    background: "rgba(255,255,255,0.92)",
-    border: "1px solid #dfebf4",
-    borderRadius: "24px",
-    padding: "22px",
-    display: "grid",
-    gridTemplateColumns: "1.2fr 0.8fr",
-    gap: "18px",
-    alignItems: "center",
-    marginBottom: "28px",
-  },
-  illustrationList: {
-    margin: 0,
-    padding: "0 0 0 18px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-    color: "#374151",
-    fontSize: "15px",
-    lineHeight: "1.55",
-  },
-  art: {
-    width: "100%",
-    height: "auto",
-    display: "block",
-    borderRadius: "20px",
-    background: "#edf6ff",
-  },
-  imageStripSection: {
-    marginTop: "8px",
-  },
-  imageStrip: {
-    display: "grid",
-    gridTemplateColumns: "repeat(4, 1fr)",
-    gap: "0",
-    borderRadius: "22px",
-    overflow: "hidden",
-    border: "1px solid #dfe8f2",
-    boxShadow: "0 10px 28px rgba(31, 41, 55, 0.08)",
-  },
-  imageCard: {
-    position: "relative",
-    minHeight: "190px",
-    overflow: "hidden",
-  },
-  stripImage: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    display: "block",
-  },
-  imageOverlay: {
-    position: "absolute",
-    inset: 0,
-    background:
-      "linear-gradient(180deg, rgba(12, 18, 28, 0.08) 0%, rgba(12, 18, 28, 0.18) 100%)",
-    pointerEvents: "none",
-  },
-  auth: {
-    padding: "44px 36px",
-    background: "#ffffff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  authCard: {
-    width: "100%",
-    maxWidth: "420px",
-  },
-  topNote: {
-    fontSize: "13px",
-    color: "#6b7280",
-    marginBottom: "18px",
-  },
-  panel: {
-    border: "1px solid #dbe4ee",
-    borderRadius: "22px",
-    padding: "24px",
-    background: "#fff",
-  },
-  panelTitle: {
-    margin: "0 0 16px",
-    fontSize: "30px",
-    color: "#1f2937",
-  },
-  secureBanner: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    background: "#f5fbf7",
-    border: "1px solid #d7efe0",
-    color: "#235b44",
-    fontSize: "14px",
-    borderRadius: "14px",
-    padding: "12px 14px",
-    marginBottom: "18px",
-    lineHeight: "1.5",
-  },
-  secureIcon: {
-    width: "30px",
-    height: "30px",
-    borderRadius: "50%",
-    background: "#dff4e7",
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontWeight: "bold",
-    flexShrink: 0,
-  },
-  checkboxBox: {
-    display: "grid",
-    gap: "12px",
-    marginBottom: "18px",
-  },
-  checkboxRow: {
-    display: "flex",
-    alignItems: "flex-start",
-    gap: "10px",
-    fontSize: "14px",
-    color: "#334155",
-    lineHeight: "1.5",
-  },
-  linkButton: {
-    border: "none",
-    background: "transparent",
-    color: "#2563eb",
-    fontWeight: "700",
-    cursor: "pointer",
-    textDecoration: "underline",
-    padding: 0,
-  },
-  primaryBtn: {
-    width: "100%",
-    border: "none",
-    borderRadius: "16px",
-    padding: "15px 18px",
-    fontSize: "16px",
-    fontWeight: "700",
-    cursor: "pointer",
-    background: "#356dcb",
-    color: "white",
-  },
-  note: {
-    fontSize: "13px",
-    marginTop: "15px",
-    color: "#777",
-    lineHeight: "1.5",
-    textAlign: "center",
-  },
-  qaRow: {
-    fontSize: "14px",
-    marginTop: "16px",
-    color: "#334155",
-    textAlign: "center",
-  },
-  trustRow: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: "10px",
-    marginTop: "18px",
-  },
-  trustItem: {
-    border: "1px solid #e3ebf4",
-    background: "#f9fbfd",
-    borderRadius: "14px",
-    padding: "12px",
-    textAlign: "center",
-    fontSize: "12px",
-    color: "#6b7280",
-    lineHeight: "1.35",
-    display: "flex",
-    flexDirection: "column",
-    gap: "4px",
-  },
-  modalOverlay: {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(15, 23, 42, 0.55)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1000,
-    padding: "20px",
-  },
-  modalCard: {
-    width: "100%",
-    maxWidth: "720px",
-    background: "#ffffff",
-    borderRadius: "22px",
-    padding: "26px",
-    boxShadow: "0 24px 70px rgba(15, 23, 42, 0.28)",
-    maxHeight: "84vh",
-    overflowY: "auto",
-  },
-  modalHeader: {
-    display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: "12px",
-    marginBottom: "10px",
-  },
-  modalClose: {
-    border: "none",
-    background: "transparent",
-    fontSize: "28px",
-    lineHeight: "1",
-    color: "#64748b",
-    cursor: "pointer",
-    padding: "0 6px",
-    flexShrink: 0,
-  },
-  consentList: {
-    margin: "0 0 14px",
-    padding: "0 0 0 20px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "12px",
-  },
-  modalTitle: {
-    margin: 0,
-    fontSize: "26px",
-    color: "#0f172a",
-  },
-  modalSubTitle: {
-    margin: "0 0 10px",
-    fontSize: "17px",
-    color: "#1f2937",
-  },
-  modalContent: {
-    fontSize: "14px",
-    lineHeight: "1.65",
-    color: "#334155",
-  },
-  boldText: {
-    fontWeight: "700",
-    color: "#0f172a",
-  },
-  modalActions: {
-    marginTop: "22px",
-    display: "flex",
-    justifyContent: "flex-end",
-    gap: "12px",
-    flexWrap: "wrap",
-  },
-  secondaryBtn: {
-    border: "1px solid #cbd5e1",
-    borderRadius: "14px",
-    padding: "12px 16px",
-    background: "#ffffff",
-    color: "#334155",
-    fontWeight: "700",
-    cursor: "pointer",
-  },
-  modalPrimaryBtn: {
-    border: "none",
-    borderRadius: "14px",
-    padding: "12px 16px",
-    background: "#356dcb",
-    color: "#ffffff",
-    fontWeight: "700",
-    cursor: "pointer",
-  },
-};

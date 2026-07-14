@@ -6,6 +6,7 @@ import { apiRequest } from "../../config/authConfig";
 
 import { API_BASE_URL } from "../../config/config";
 import { useIsMobile } from "../../hooks/useIsMobile";
+import styles from "./EpisodePage.module.css";
 
 const episodeImages = {
   1: "/episode%201.jpg",
@@ -214,8 +215,8 @@ export default function EpisodePage() {
 
   if (!episode) {
     return (
-      <div style={styles.loadingPage}>
-        <div style={styles.loadingCard}>Loading episode...</div>
+      <div className={styles.loadingPage}>
+        <div className={styles.loadingCard}>Loading episode...</div>
       </div>
     );
   }
@@ -225,64 +226,64 @@ export default function EpisodePage() {
     episode.image_url || episodeImages[Number(episodeNumber)] || episodeImages[2];
 
   return (
-    <div style={{...styles.page, padding: isMobile ? "12px" : "28px"}}>
-      <div style={styles.container}>
-        <div style={styles.topBar}>
-          <button style={styles.backButton} onClick={() => navigate("/")}>
+    <div className={styles.page} style={{ padding: isMobile ? "12px" : "28px" }}>
+      <div className={styles.container}>
+        <div className={styles.topBar}>
+          <button className={styles.backButton} onClick={() => navigate("/")}>
             ← Back to Dashboard
           </button>
 
-          <div style={styles.progressBadge}>Episode {episodeNumber}</div>
+          <div className={styles.progressBadge}>Episode {episodeNumber}</div>
         </div>
 
-        <div style={styles.headerCard}>
+        <div className={styles.headerCard}>
           {!isMobile && (
-            <div style={styles.headerImageArea}>
+            <div className={styles.headerImageArea}>
               <img
                 src={headerImage}
                 alt={`Episode ${episodeNumber}`}
-                style={styles.headerImage}
+                className={styles.headerImage}
               />
-              <div style={styles.headerImageFade}></div>
+              <div className={styles.headerImageFade}></div>
             </div>
           )}
 
-          <div style={{...styles.headerText, width: isMobile ? "100%" : "58%"}}>
-            <div style={styles.tag}>Weekly learning episode</div>
-            <h1 style={{...styles.title, fontSize: isMobile ? "24px" : "40px"}}>{episode.title}</h1>
+          <div className={styles.headerText} style={{ width: isMobile ? "100%" : "58%" }}>
+            <div className={styles.tag}>Weekly learning episode</div>
+            <h1 className={styles.title} style={{ fontSize: isMobile ? "24px" : "40px" }}>{episode.title}</h1>
 
             {episode.description ? (
-              <p style={styles.description}>{episode.description}</p>
+              <p className={styles.description}>{episode.description}</p>
             ) : null}
           </div>
         </div>
 
         <div
+          className={styles.layout}
           style={{
-            ...styles.layout,
             gridTemplateColumns: isMobile || !showTranscript ? "1fr" : "0.95fr 1.4fr",
           }}
         >
           {showTranscript && (
-            <div style={{...styles.transcriptPanel, order: isMobile ? 1 : 0, position: isMobile ? "static" : "sticky"}}>
-              <div style={styles.transcriptHeader}>
-                <h3 style={styles.transcriptTitle}>Transcript</h3>
-                <p style={styles.transcriptSub}>
+            <div
+              className={styles.transcriptPanel}
+              style={{ order: isMobile ? 1 : 0, position: isMobile ? "static" : "sticky" }}
+            >
+              <div className={styles.transcriptHeader}>
+                <h3 className={styles.transcriptTitle}>Transcript</h3>
+                <p className={styles.transcriptSub}>
                   Read along while listening. The transcript scrolls automatically.
                 </p>
               </div>
 
-              <div style={styles.transcriptBody}>
+              <div className={styles.transcriptBody}>
                 {fullTranscript.length > 0 ? (
-                 <div style={styles.transcriptContainer}>
+                 <div className={styles.transcriptContainer}>
   {fullTranscript.map((seg, idx) => (
     <div
       key={idx}
       ref={idx === currentIndex ? activeSegmentRef : null}
-      style={{
-        ...styles.transcriptBlock,
-        ...(idx === currentIndex ? styles.transcriptBlockActive : {}),
-      }}
+      className={`${styles.transcriptBlock} ${idx === currentIndex ? styles.transcriptBlockActive : ""}`}
     >
       {seg.text}
     </div>
@@ -295,34 +296,34 @@ export default function EpisodePage() {
             </div>
           )}
 
-          <div style={{...styles.mainColumn, order: isMobile ? 0 : 1}}>
-            <div style={styles.audioCard}>
-              <div style={styles.sectionHeader}>
+          <div className={styles.mainColumn} style={{ order: isMobile ? 0 : 1 }}>
+            <div className={styles.audioCard}>
+              <div className={styles.sectionHeader}>
                 <div>
-                  <h2 style={styles.sectionTitle}>Listen to this episode</h2>
-                  <p style={styles.sectionSub}>
+                  <h2 className={styles.sectionTitle}>Listen to this episode</h2>
+                  <p className={styles.sectionSub}>
                     Play the audio below and continue at your own pace.
                   </p>
                 </div>
 
                 <button
                   onClick={() => setShowTranscript(!showTranscript)}
-                  style={styles.secondaryButton}
+                  className={styles.secondaryButton}
                 >
                   {showTranscript ? "Hide Transcript" : "Show Transcript"}
                 </button>
               </div>
 
-              <div style={styles.audioWrapper}>
+              <div className={styles.audioWrapper}>
                 {localReactions.length > 0 && audioDuration > 0 && (
-                  <div style={styles.emojiTimeline}>
-                    <div style={styles.emojiTimelineLine} />
+                  <div className={styles.emojiTimeline}>
+                    <div className={styles.emojiTimelineLine} />
                     {localReactions.map((r, i) => (
                       <span
                         key={i}
                         title={`${Math.floor(r.timestamp / 60)}:${String(r.timestamp % 60).padStart(2, "0")}`}
+                        className={styles.emojiTimelineMarker}
                         style={{
-                          ...styles.emojiTimelineMarker,
                           left: `${Math.min((r.timestamp / audioDuration) * 100, 97)}%`,
                         }}
                       >
@@ -334,7 +335,7 @@ export default function EpisodePage() {
                 <audio
                   ref={audioRef}
                   controls
-                  style={styles.audioPlayer}
+                  className={styles.audioPlayer}
                   onLoadedMetadata={(e) => setAudioDuration(e.target.duration)}
                 >
                   <source src={episode.audio_url} type="audio/mpeg" />
@@ -342,15 +343,15 @@ export default function EpisodePage() {
                 </audio>
               </div>
 
-              <div style={styles.reactionCard}>
-                <p style={styles.reactionTitle}>
+              <div className={styles.reactionCard}>
+                <p className={styles.reactionTitle}>
                   React at any moment while listening
                 </p>
 
-                <div style={styles.reactionPopupArea}>
+                <div className={styles.reactionPopupArea}>
                   {reactionPopup && (
-                    <div style={styles.reactionPopup}>
-                      <span style={styles.reactionPopupEmoji}>
+                    <div className={styles.reactionPopup}>
+                      <span className={styles.reactionPopupEmoji}>
                         {reactionPopup.emoji}
                       </span>
                       <span>{reactionPopup.text}</span>
@@ -358,15 +359,15 @@ export default function EpisodePage() {
                   )}
                 </div>
 
-                <div style={styles.reactionRow}>
+                <div className={styles.reactionRow}>
                   {["😊", "😐", "😢", "👍", "❤️"].map((emoji) => (
                     <button
                       key={emoji}
                       onClick={() => submitReaction(emoji)}
                       disabled={savingReaction}
-                      style={styles.emojiButton}
+                      className={styles.emojiButton}
                     >
-                      <span style={styles.emojiButtonIcon}>{emoji}</span>
+                      <span className={styles.emojiButtonIcon}>{emoji}</span>
                     </button>
                   ))}
                 </div>
@@ -374,12 +375,12 @@ export default function EpisodePage() {
             </div>
 
             {currentQuestion && (
-              <div style={styles.quizCard}>
-                <div style={styles.quizTop}>
-                  <div style={styles.quizBadge}>Optional Reflection</div>
+              <div className={styles.quizCard}>
+                <div className={styles.quizTop}>
+                  <div className={styles.quizBadge}>Optional Reflection</div>
                 </div>
 
-                <h3 style={styles.questionText}>{currentQuestion.question}</h3>
+                <h3 className={styles.questionText}>{currentQuestion.question}</h3>
 
                 {!quizSubmitted ? (
                   <>
@@ -387,13 +388,13 @@ export default function EpisodePage() {
                       value={quizAnswer}
                       onChange={(e) => setQuizAnswer(e.target.value)}
                       placeholder="Type your response here..."
-                      style={styles.textArea}
+                      className={styles.textArea}
                     />
 
-                    <div style={styles.quizActionRow}>
+                    <div className={styles.quizActionRow}>
                       <button
                         onClick={() => submitQuizResponse(false)}
-                        style={styles.primaryButton}
+                        className={styles.primaryButton}
                         disabled={!quizAnswer.trim() || savingQuiz}
                       >
                         {savingQuiz ? "Saving..." : "Save Response"}
@@ -401,7 +402,7 @@ export default function EpisodePage() {
 
                       <button
                         onClick={() => submitQuizResponse(true)}
-                        style={styles.secondaryFinishButton}
+                        className={styles.secondaryFinishButton}
                         disabled={savingQuiz}
                       >
                         Skip
@@ -409,9 +410,9 @@ export default function EpisodePage() {
                     </div>
                   </>
                 ) : (
-                  <div style={styles.explanationBox}>
-                    <p style={styles.explanationHeading}>Response saved</p>
-                    <p style={styles.explanationText}>
+                  <div className={styles.explanationBox}>
+                    <p className={styles.explanationHeading}>Response saved</p>
+                    <p className={styles.explanationText}>
                       Thank you. Your response has been recorded.
                     </p>
                   </div>
@@ -420,26 +421,26 @@ export default function EpisodePage() {
             )}
 
             {!currentQuestion && (
-              <div style={styles.quizCard}>
-                <div style={styles.quizTop}>
-                  <div style={styles.quizBadge}>No Reflection Question</div>
+              <div className={styles.quizCard}>
+                <div className={styles.quizTop}>
+                  <div className={styles.quizBadge}>No Reflection Question</div>
                 </div>
 
-                <p style={styles.explanationText}>
+                <p className={styles.explanationText}>
                   This episode does not have a reflection question. You can
                   finish the episode whenever you are ready.
                 </p>
               </div>
             )}
 
-            <div style={styles.finishCard}>
-              <h3 style={styles.finishTitle}>Finish this episode</h3>
-              <p style={styles.finishText}>
+            <div className={styles.finishCard}>
+              <h3 className={styles.finishTitle}>Finish this episode</h3>
+              <p className={styles.finishText}>
                 When you are ready, save your progress and return to the
                 dashboard.
               </p>
 
-              <button onClick={markComplete} style={styles.continueButton}>
+              <button onClick={markComplete} className={styles.continueButton}>
                 Continue →
               </button>
             </div>
@@ -451,7 +452,7 @@ export default function EpisodePage() {
         href="/qa.pdf"
         target="_blank"
         rel="noopener noreferrer"
-        style={styles.qaFab}
+        className={styles.qaFab}
         title="Read our Q&A"
       >
         Q&amp;A
@@ -459,449 +460,3 @@ export default function EpisodePage() {
     </div>
   );
 }
-
-const styles = {
-  qaFab: {
-    position: "fixed",
-    right: "24px",
-    bottom: "24px",
-    zIndex: 1000,
-    background: "#356dcb",
-    color: "#ffffff",
-    textDecoration: "none",
-    fontSize: "15px",
-    fontWeight: "700",
-    padding: "12px 20px",
-    borderRadius: "999px",
-    boxShadow: "0 10px 24px rgba(53,109,203,0.35)",
-  },
-  page: {
-    minHeight: "100vh",
-    background: "linear-gradient(180deg, #eef5fb 0%, #f8fbfd 100%)",
-    fontFamily: "Arial, Helvetica, sans-serif",
-    padding: "28px",
-  },
-  container: {
-    maxWidth: "1240px",
-    margin: "0 auto",
-  },
-  loadingPage: {
-    minHeight: "100vh",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "linear-gradient(180deg, #eef5fb 0%, #f8fbfd 100%)",
-    fontFamily: "Arial, Helvetica, sans-serif",
-    padding: "24px",
-  },
-  loadingCard: {
-    background: "#fff",
-    border: "1px solid #e4edf5",
-    borderRadius: "18px",
-    padding: "24px 28px",
-    boxShadow: "0 12px 32px rgba(31, 41, 55, 0.08)",
-    fontSize: "16px",
-    color: "#334155",
-  },
-  topBar: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: "12px",
-    flexWrap: "wrap",
-    marginBottom: "20px",
-  },
-  backButton: {
-    background: "#ffffff",
-    border: "1px solid #d7e3ee",
-    borderRadius: "12px",
-    padding: "10px 16px",
-    cursor: "pointer",
-    fontSize: "14px",
-    fontWeight: "600",
-    color: "#334155",
-  },
-  progressBadge: {
-    background: "#ffffff",
-    border: "1px solid #d7e3ee",
-    borderRadius: "999px",
-    padding: "10px 14px",
-    fontSize: "13px",
-    fontWeight: "700",
-    color: "#2858a6",
-  },
-  headerCard: {
-    position: "relative",
-    minHeight: "170px",
-    background:
-      "radial-gradient(circle at top left, rgba(95,184,143,0.15), transparent 28%), linear-gradient(180deg, #f6fbff 0%, #eef6fb 100%)",
-    border: "1px solid #e4eef6",
-    borderRadius: "28px",
-    boxShadow: "0 12px 32px rgba(31, 41, 55, 0.06)",
-    marginBottom: "24px",
-    overflow: "hidden",
-  },
-  headerImageArea: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    bottom: 0,
-    width: "42%",
-    overflow: "hidden",
-  },
-  headerImage: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    display: "block",
-  },
-  headerImageFade: {
-    position: "absolute",
-    inset: 0,
-    background:
-      "linear-gradient(to right, rgba(238,246,251,0.98) 0%, rgba(238,246,251,0.94) 20%, rgba(238,246,251,0.76) 38%, rgba(238,246,251,0.22) 60%, rgba(238,246,251,0) 100%)",
-  },
-  headerText: {
-    position: "relative",
-    zIndex: 2,
-    width: "58%",
-    padding: "32px",
-    boxSizing: "border-box",
-  },
-  tag: {
-    display: "inline-block",
-    background: "#ffffff",
-    border: "1px solid #d8e6f2",
-    borderRadius: "999px",
-    padding: "8px 14px",
-    fontSize: "13px",
-    fontWeight: "700",
-    color: "#2858a6",
-    marginBottom: "18px",
-  },
-  title: {
-    fontSize: "40px",
-    lineHeight: "1.15",
-    margin: "0 0 12px 0",
-    color: "#0f172a",
-  },
-  description: {
-    fontSize: "17px",
-    lineHeight: "1.7",
-    color: "#64748b",
-    margin: 0,
-  },
-  layout: {
-    display: "grid",
-    gap: "24px",
-    alignItems: "start",
-  },
-  mainColumn: {
-    display: "grid",
-    gap: "20px",
-  },
-  audioCard: {
-    background: "#ffffff",
-    border: "1px solid #e3ecf4",
-    borderRadius: "24px",
-    padding: "24px",
-    boxShadow: "0 12px 32px rgba(31, 41, 55, 0.05)",
-  },
-  sectionHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: "16px",
-    flexWrap: "wrap",
-    marginBottom: "18px",
-  },
-  sectionTitle: {
-    margin: "0 0 6px 0",
-    fontSize: "24px",
-    color: "#0f172a",
-  },
-  sectionSub: {
-    margin: 0,
-    fontSize: "14px",
-    color: "#64748b",
-    lineHeight: "1.5",
-  },
-  secondaryButton: {
-    background: "#ffffff",
-    border: "1px solid #d7e3ee",
-    borderRadius: "12px",
-    padding: "10px 14px",
-    cursor: "pointer",
-    fontSize: "14px",
-    fontWeight: "600",
-    color: "#334155",
-  },
-  audioWrapper: {
-    background: "#f8fbfe",
-    border: "1px solid #dce9f5",
-    borderRadius: "18px",
-    padding: "16px",
-  },
-  audioPlayer: {
-    width: "100%",
-  },
-  emojiTimeline: {
-    position: "relative",
-    height: "36px",
-    marginBottom: "8px",
-  },
-  emojiTimelineLine: {
-    position: "absolute",
-    top: "50%",
-    left: 0,
-    right: 0,
-    height: "2px",
-    background: "#dce9f5",
-    borderRadius: "2px",
-    transform: "translateY(-50%)",
-  },
-  emojiTimelineMarker: {
-    position: "absolute",
-    top: "50%",
-    transform: "translate(-50%, -50%)",
-    fontSize: "20px",
-    lineHeight: 1,
-    cursor: "default",
-    userSelect: "none",
-  },
-  reactionCard: {
-    marginTop: "16px",
-    background: "#f8fbfe",
-    border: "1px solid #dce9f5",
-    borderRadius: "18px",
-    padding: "16px",
-  },
-  reactionTitle: {
-    margin: "0 0 12px 0",
-    fontSize: "15px",
-    fontWeight: "700",
-    color: "#0f172a",
-  },
-  reactionPopupArea: {
-    minHeight: "42px",
-    marginBottom: "8px",
-  },
-  reactionPopup: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "10px",
-    background: "#ffffff",
-    border: "1px solid #d7e3ee",
-    borderRadius: "999px",
-    padding: "10px 14px",
-    fontSize: "13px",
-    fontWeight: "600",
-    color: "#334155",
-    boxShadow: "0 10px 22px rgba(31, 41, 55, 0.08)",
-  },
-  reactionPopupEmoji: {
-    fontSize: "18px",
-    lineHeight: 1,
-  },
-  reactionRow: {
-    display: "flex",
-    gap: "10px",
-    flexWrap: "wrap",
-  },
-  emojiButton: {
-    fontSize: "24px",
-    background: "#ffffff",
-    border: "1px solid #d7e3ee",
-    borderRadius: "12px",
-    padding: "10px 14px",
-    cursor: "pointer",
-    minWidth: "54px",
-  },
-  emojiButtonIcon: {
-    display: "inline-block",
-  },
-  quizCard: {
-    background: "#ffffff",
-    border: "1px solid #e3ecf4",
-    borderRadius: "24px",
-    padding: "24px",
-    boxShadow: "0 12px 32px rgba(31, 41, 55, 0.05)",
-  },
-  quizTop: {
-    marginBottom: "16px",
-  },
-  quizBadge: {
-    display: "inline-block",
-    background: "#eef4ff",
-    border: "1px solid #d6e3ff",
-    color: "#2858a6",
-    borderRadius: "999px",
-    padding: "8px 12px",
-    fontSize: "13px",
-    fontWeight: "700",
-  },
-  questionText: {
-    margin: "0 0 18px 0",
-    fontSize: "22px",
-    lineHeight: "1.45",
-    color: "#0f172a",
-  },
-  textArea: {
-    width: "100%",
-    minHeight: "120px",
-    padding: "14px",
-    borderRadius: "14px",
-    border: "1px solid #d8e3ed",
-    fontSize: "15px",
-    color: "#1f2937",
-    resize: "vertical",
-    outline: "none",
-    boxSizing: "border-box",
-  },
-  explanationBox: {
-    marginTop: "20px",
-    padding: "18px",
-    borderRadius: "16px",
-    backgroundColor: "#f8fbfe",
-    border: "1px solid #dce9f5",
-  },
-  explanationHeading: {
-    margin: "0 0 8px 0",
-    fontSize: "16px",
-    fontWeight: "700",
-    color: "#0f172a",
-  },
-  explanationText: {
-    margin: "0 0 16px 0",
-    fontSize: "14px",
-    lineHeight: "1.6",
-    color: "#64748b",
-  },
-  quizActionRow: {
-    display: "flex",
-    gap: "12px",
-    marginTop: "20px",
-    flexWrap: "wrap",
-  },
-  finishCard: {
-    background: "#ffffff",
-    border: "1px solid #e3ecf4",
-    borderRadius: "24px",
-    padding: "24px",
-    boxShadow: "0 12px 32px rgba(31, 41, 55, 0.05)",
-  },
-  finishTitle: {
-    margin: "0 0 8px 0",
-    fontSize: "20px",
-    color: "#0f172a",
-  },
-  finishText: {
-    margin: "0 0 18px 0",
-    fontSize: "14px",
-    lineHeight: "1.6",
-    color: "#64748b",
-  },
-  primaryButton: {
-    background: "#356dcb",
-    color: "#ffffff",
-    border: "none",
-    borderRadius: "14px",
-    padding: "13px 18px",
-    fontSize: "15px",
-    fontWeight: "700",
-    cursor: "pointer",
-    boxShadow: "0 10px 22px rgba(53,109,203,0.22)",
-  },
-  continueButton: {
-    width: "100%",
-    background: "#356dcb",
-    color: "#ffffff",
-    border: "none",
-    borderRadius: "18px",
-    padding: "20px 24px",
-    fontSize: "22px",
-    fontWeight: "800",
-    cursor: "pointer",
-    boxShadow: "0 12px 28px rgba(53,109,203,0.35)",
-    letterSpacing: "0.3px",
-  },
-  transcriptContainer: {
-  display: "flex",
-  flexDirection: "column",
-  gap: "10px",
-},
-
-transcriptBlock: {
-  padding: "8px 10px",
-  borderRadius: "8px",
-  lineHeight: "1.6",
-  fontSize: "15px",
-  transition: "all 0.2s ease",
-},
-
-transcriptBlockActive: {
-  backgroundColor: "#dbeafe",
-  fontWeight: "600",
-  color: "#0f172a",
-},
-  secondaryFinishButton: {
-    background: "#ffffff",
-    color: "#334155",
-    border: "1px solid #d7e3ee",
-    borderRadius: "14px",
-    padding: "13px 18px",
-    fontSize: "15px",
-    fontWeight: "700",
-    cursor: "pointer",
-  },
-  transcriptPanel: {
-    background: "#ffffff",
-    border: "1px solid #e3ecf4",
-    borderRadius: "24px",
-    padding: "24px",
-    boxShadow: "0 12px 32px rgba(31, 41, 55, 0.05)",
-    position: "sticky",
-    top: "24px",
-    maxHeight: "75vh",
-    overflow: "hidden",
-  },
-  transcriptHeader: {
-    marginBottom: "14px",
-  },
-  transcriptTitle: {
-    margin: "0 0 6px 0",
-    fontSize: "22px",
-    color: "#0f172a",
-  },
-  transcriptSub: {
-    margin: 0,
-    fontSize: "14px",
-    color: "#64748b",
-    lineHeight: "1.5",
-  },
-  transcriptBody: {
-    maxHeight: "58vh",
-    overflowY: "auto",
-    lineHeight: "1.8",
-    fontSize: "16px",
-    color: "#334155",
-    paddingRight: "6px",
-  },
-  transcriptParagraph: {
-    margin: 0,
-    lineHeight: "1.9",
-    fontSize: "16px",
-    color: "#334155",
-  },
-  transcriptTextChunk: {
-    cursor: "pointer",
-    transition: "all 0.2s ease",
-  },
-  transcriptTextChunkActive: {
-    backgroundColor: "#dbeafe",
-    padding: "2px 5px",
-    borderRadius: "6px",
-    fontWeight: "700",
-    color: "#0f172a",
-  },
-};

@@ -1,0 +1,489 @@
+.qaFab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1000;
+  background: #356dcb;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 12px 20px;
+  border-radius: 999px;
+  box-shadow: 0 10px 24px rgba(53, 109, 203, 0.35);
+}
+
+.page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #eef5fb 0%, #f8fbfd 100%);
+  font-family: Arial, Helvetica, sans-serif;
+  padding: 28px;
+}
+
+.container {
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.loadingPage {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #eef5fb 0%, #f8fbfd 100%);
+  font-family: Arial, Helvetica, sans-serif;
+  padding: 24px;
+}
+
+.loadingCard {
+  background: #fff;
+  border: 1px solid #e4edf5;
+  border-radius: 18px;
+  padding: 24px 28px;
+  box-shadow: 0 12px 32px rgba(31, 41, 55, 0.08);
+  font-size: 16px;
+  color: #334155;
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.backButton {
+  background: #ffffff;
+  border: 1px solid #d7e3ee;
+  border-radius: 12px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.progressBadge {
+  background: #ffffff;
+  border: 1px solid #d7e3ee;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #2858a6;
+}
+
+.headerCard {
+  position: relative;
+  min-height: 170px;
+  background:
+    radial-gradient(circle at top left, rgba(95, 184, 143, 0.15), transparent 28%),
+    linear-gradient(180deg, #f6fbff 0%, #eef6fb 100%);
+  border: 1px solid #e4eef6;
+  border-radius: 28px;
+  box-shadow: 0 12px 32px rgba(31, 41, 55, 0.06);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.headerImageArea {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 42%;
+  overflow: hidden;
+}
+
+.headerImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.headerImageFade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(238, 246, 251, 0.98) 0%,
+    rgba(238, 246, 251, 0.94) 20%,
+    rgba(238, 246, 251, 0.76) 38%,
+    rgba(238, 246, 251, 0.22) 60%,
+    rgba(238, 246, 251, 0) 100%
+  );
+}
+
+.headerText {
+  position: relative;
+  z-index: 2;
+  width: 58%;
+  padding: 32px;
+  box-sizing: border-box;
+}
+
+.tag {
+  display: inline-block;
+  background: #ffffff;
+  border: 1px solid #d8e6f2;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #2858a6;
+  margin-bottom: 18px;
+}
+
+.title {
+  font-size: 40px;
+  line-height: 1.15;
+  margin: 0 0 12px 0;
+  color: #0f172a;
+}
+
+.description {
+  font-size: 17px;
+  line-height: 1.7;
+  color: #64748b;
+  margin: 0;
+}
+
+.layout {
+  display: grid;
+  gap: 24px;
+  align-items: start;
+}
+
+.mainColumn {
+  display: grid;
+  gap: 20px;
+}
+
+.audioCard {
+  background: #ffffff;
+  border: 1px solid #e3ecf4;
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 12px 32px rgba(31, 41, 55, 0.05);
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.sectionTitle {
+  margin: 0 0 6px 0;
+  font-size: 24px;
+  color: #0f172a;
+}
+
+.sectionSub {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.secondaryButton {
+  background: #ffffff;
+  border: 1px solid #d7e3ee;
+  border-radius: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.audioWrapper {
+  background: #f8fbfe;
+  border: 1px solid #dce9f5;
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.audioPlayer {
+  width: 100%;
+}
+
+.emojiTimeline {
+  position: relative;
+  height: 36px;
+  margin-bottom: 8px;
+}
+
+.emojiTimelineLine {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #dce9f5;
+  border-radius: 2px;
+  transform: translateY(-50%);
+}
+
+.emojiTimelineMarker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 20px;
+  line-height: 1;
+  cursor: default;
+  user-select: none;
+}
+
+.reactionCard {
+  margin-top: 16px;
+  background: #f8fbfe;
+  border: 1px solid #dce9f5;
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.reactionTitle {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.reactionPopupArea {
+  min-height: 42px;
+  margin-bottom: 8px;
+}
+
+.reactionPopup {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid #d7e3ee;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  box-shadow: 0 10px 22px rgba(31, 41, 55, 0.08);
+}
+
+.reactionPopupEmoji {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.reactionRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.emojiButton {
+  font-size: 24px;
+  background: #ffffff;
+  border: 1px solid #d7e3ee;
+  border-radius: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  min-width: 54px;
+}
+
+.emojiButtonIcon {
+  display: inline-block;
+}
+
+.quizCard {
+  background: #ffffff;
+  border: 1px solid #e3ecf4;
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 12px 32px rgba(31, 41, 55, 0.05);
+}
+
+.quizTop {
+  margin-bottom: 16px;
+}
+
+.quizBadge {
+  display: inline-block;
+  background: #eef4ff;
+  border: 1px solid #d6e3ff;
+  color: #2858a6;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.questionText {
+  margin: 0 0 18px 0;
+  font-size: 22px;
+  line-height: 1.45;
+  color: #0f172a;
+}
+
+.textArea {
+  width: 100%;
+  min-height: 120px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid #d8e3ed;
+  font-size: 15px;
+  color: #1f2937;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.explanationBox {
+  margin-top: 20px;
+  padding: 18px;
+  border-radius: 16px;
+  background-color: #f8fbfe;
+  border: 1px solid #dce9f5;
+}
+
+.explanationHeading {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.explanationText {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #64748b;
+}
+
+.quizActionRow {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.finishCard {
+  background: #ffffff;
+  border: 1px solid #e3ecf4;
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 12px 32px rgba(31, 41, 55, 0.05);
+}
+
+.finishTitle {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  color: #0f172a;
+}
+
+.finishText {
+  margin: 0 0 18px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #64748b;
+}
+
+.primaryButton {
+  background: #356dcb;
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  padding: 13px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(53, 109, 203, 0.22);
+}
+
+.continueButton {
+  width: 100%;
+  background: #356dcb;
+  color: #ffffff;
+  border: none;
+  border-radius: 18px;
+  padding: 20px 24px;
+  font-size: 22px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 12px 28px rgba(53, 109, 203, 0.35);
+  letter-spacing: 0.3px;
+}
+
+.transcriptContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.transcriptBlock {
+  padding: 8px 10px;
+  border-radius: 8px;
+  line-height: 1.6;
+  font-size: 15px;
+  transition: all 0.2s ease;
+}
+
+.transcriptBlockActive {
+  background-color: #dbeafe;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.secondaryFinishButton {
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #d7e3ee;
+  border-radius: 14px;
+  padding: 13px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.transcriptPanel {
+  background: #ffffff;
+  border: 1px solid #e3ecf4;
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 12px 32px rgba(31, 41, 55, 0.05);
+  position: sticky;
+  top: 24px;
+  max-height: 75vh;
+  overflow: hidden;
+}
+
+.transcriptHeader {
+  margin-bottom: 14px;
+}
+
+.transcriptTitle {
+  margin: 0 0 6px 0;
+  font-size: 22px;
+  color: #0f172a;
+}
+
+.transcriptSub {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.transcriptBody {
+  max-height: 58vh;
+  overflow-y: auto;
+  line-height: 1.8;
+  font-size: 16px;
+  color: #334155;
+  padding-right: 6px;
+}

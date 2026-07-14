@@ -1,0 +1,53 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f9fc;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.card {
+  background: #fff;
+  padding: 30px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  box-sizing: border-box;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  margin-bottom: 10px;
+}
+
+.text {
+  margin-bottom: 15px;
+}
+
+.list {
+  margin-bottom: 20px;
+}
+
+.buttonRow {
+  display: flex;
+  justify-content: space-between;
+}
+
+.yesButton {
+  background: #356dcb;
+  color: #fff;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.noButton {
+  background: #e2e8f0;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
