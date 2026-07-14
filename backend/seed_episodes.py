@@ -5,8 +5,9 @@ Run once to seed test episodes into the local SQLite database.
     python seed_episodes.py
 """
 
-from database import SessionLocal, engine, Base
-from models import Episode
+from app.db.base import Base
+from app.db.session import SessionLocal, engine
+from app.models import Episode
 
 Base.metadata.create_all(bind=engine)
 

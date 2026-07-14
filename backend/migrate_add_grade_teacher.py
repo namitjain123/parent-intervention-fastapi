@@ -1,9 +1,9 @@
 """
 One-off migration: add grade / teacher_code / teacher_name columns to users.
 
-Base.metadata.create_all only creates missing TABLES, not missing COLUMNS, so
-existing databases need this ALTER. Columns are nullable, so existing rows are
-unaffected. Safe to run multiple times (IF NOT EXISTS).
+Historical script, kept for reference. New schema changes should use Alembic
+instead (see alembic/ and `alembic revision --autogenerate`), since
+Base.metadata.create_all only creates missing TABLES, not missing COLUMNS.
 
 Run from the backend/ directory:
 
@@ -12,7 +12,7 @@ Run from the backend/ directory:
 """
 
 from sqlalchemy import text
-from database import engine
+from app.db.session import engine
 
 STATEMENTS = [
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS grade VARCHAR",

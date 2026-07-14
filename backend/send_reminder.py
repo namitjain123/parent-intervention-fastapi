@@ -1,14 +1,11 @@
-from dotenv import load_dotenv
-load_dotenv()
-
-from database import SessionLocal
-from utils.reminder_service import (
+from app.db.session import SessionLocal
+from app.services.reminder_service import (
     get_users_needing_form_reminder,
     get_users_needing_25day_progress_reminder,
     mark_reminder_sent,
     mark_midway_reminder_sent,
 )
-from utils.email_service import (
+from app.services.email_service import (
     send_reminder_email,
     send_25day_progress_reminder,
 )
