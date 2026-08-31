@@ -78,6 +78,8 @@ def main():
     parser.add_argument("--inactive", action="store_true", help="make eligible for the 7-day inactivity reminder")
     parser.add_argument("--old-account", action="store_true", help="make eligible for the 21-day progress reminder")
     parser.add_argument("--both", action="store_true", help="both of the above")
+    parser.add_argument("--unlock-now", action="store_true", help="Class B: make the delayed survey unlock on the next job run")
+    parser.add_argument("--reset-emails", action="store_true", help="clear the 'already sent' stamps so emails can fire again")
     parser.add_argument("--apply", action="store_true", help="actually write the changes")
     args = parser.parse_args()
 
@@ -102,8 +104,8 @@ def main():
         want_inactive = args.inactive or args.both
         want_old = args.old_account or args.both
 
-        if not (want_inactive or want_old):
-            parser.error("pass --inactive, --old-account or --both")
+        if not (want_inactive or want_old or args.unlock_now or args.reset_emails):
+            parser.error("pass --inactive, --old-account, --both, --unlock-now or --reset-emails")
 
         now = datetime.now(timezone.utc)
         changes = {}
@@ -118,8 +120,22 @@ def main():
             changes["created_at"] = now - timedelta(days=22)
             changes["midway_reminder_sent_at"] = None
 
-        # Both reminders require this to be False
-        changes["post_questionnaire_completed"] = False
+        if want_inactive or want_old:
+            # Both reminders require this to be False
+            changes["post_questionnaire_completed"] = False
+
+        if args.unlock_now:
+            # Put the unlock time in the past so the delayed-unlock job fires
+            # on its next run, without waiting out DELAYED_SURVEY_UNLOCK_MINUTES.
+            changes["delayed_unlock_at"] = now - timedelta(minutes=1)
+            changes["delayed_survey_unlocked"] = False
+            changes["unlock_email_sent_at"] = None
+
+        if args.reset_emails:
+            changes["lock_email_sent_at"] = None
+            changes["unlock_email_sent_at"] = None
+            changes["last_reminder_sent_at"] = None
+            changes["midway_reminder_sent_at"] = None
 
         print(f"\n{user.email} - planned changes:")
         for field, value in changes.items():
