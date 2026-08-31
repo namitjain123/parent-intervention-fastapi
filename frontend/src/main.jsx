@@ -5,6 +5,7 @@ import { MsalProvider } from "@azure/msal-react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import DashboardPage from "./pages/DashboardPage/DashboardPage";
 import RedcapCompletePage from "./pages/RedcapCompletePage/RedcapCompletePage";
+import RedcapPostCompletePage from "./pages/RedcapPostCompletePage/RedcapPostCompletePage";
 import { msalConfig } from "./config/authConfig";
 import EpisodePage from "./pages/EpisodePage/EpisodePage";
 import DelayedRedcapCompletePage from "./pages/DelayedRedcapCompletePage/DelayedRedcapCompletePage";
@@ -37,6 +38,7 @@ msalInstance.initialize().then(async () => {
           <Routes>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/redcap-complete" element={<RedcapCompletePage />} />
+            <Route path="/redcap-post-complete" element={<RedcapPostCompletePage />} />
             <Route path="/delayed-redcap-complete" element={<DelayedRedcapCompletePage />} />
             <Route path="/episodes/:episodeNumber" element={<EpisodePage />} />
           </Routes>
