@@ -44,5 +44,23 @@ class Settings(BaseSettings):
             f"{self.TENANT_ID}/v2.0/.well-known/openid-configuration"
         )
 
+    @property
+    def cors_origins(self) -> list[str]:
+        """
+        FRONTEND_URL plus its www / non-www counterpart, so the browser's exact
+        Origin header matches regardless of which one a visitor actually lands on
+        (CORS treats www.example.com and example.com as different origins).
+        """
+        origins = {self.FRONTEND_URL, "http://localhost:5173"}
+
+        if "://www." in self.FRONTEND_URL:
+            origins.add(self.FRONTEND_URL.replace("://www.", "://", 1))
+        else:
+            scheme, _, rest = self.FRONTEND_URL.partition("://")
+            if scheme and rest:
+                origins.add(f"{scheme}://www.{rest}")
+
+        return sorted(origins)
+
 
 settings = Settings()
