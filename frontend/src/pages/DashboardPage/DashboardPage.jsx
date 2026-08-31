@@ -13,8 +13,8 @@ const episodeImages = {
   4: "/episode%204.jpg",
   5: "/episode%205.jpg",
   6: "/episode%206.jpg",
-  7: "/episode%206.jpg",
-  8: "/episode%206.jpg",
+  7: "/episode%207.jpg",
+  8: "/episode%208.jpg",
 };
 
 export default function DashboardPage() {
