@@ -409,9 +409,11 @@ export default function DashboardPage() {
                         {isCompleted && (
                           <button
                             className={styles.completedEpisodeButton}
-                            disabled
+                            onClick={() =>
+                              (window.location.href = `/episodes/${ep.episode_number}`)
+                            }
                           >
-                            Completed
+                            Review Episode
                           </button>
                         )}
                       </div>
@@ -420,34 +422,6 @@ export default function DashboardPage() {
                 );
               })}
             </div>
-
-            {allEpisodesCompleted && !dashboard.post_questionnaire_completed && (
-              <div className={styles.postQuestionnaireCard}>
-                <div className={styles.cardTop}>
-                  <div className={styles.cardBadge}>Final Step</div>
-                  <div className={styles.estimate}>Estimated time: 5–10 mins</div>
-                </div>
-
-                <h2 className={styles.cardTitle}>Post-questionnaire required</h2>
-
-                <p className={styles.cardText}>
-                  You have completed all 8 episodes. Please complete the final
-                  post-questionnaire to finish the program.
-                </p>
-
-                <button
-                  className={styles.primaryButton}
-                  onClick={openPostQuestionnaire}
-                >
-                  Start Post-questionnaire
-                </button>
-
-                <div className={styles.noteBox}>
-                  This final questionnaire helps the research team understand
-                  your experience after completing the full program.
-                </div>
-              </div>
-            )}
 
             {allEpisodesCompleted && dashboard.post_questionnaire_completed && (
               <div className={styles.postQuestionnaireCard}>

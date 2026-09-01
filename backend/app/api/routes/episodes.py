@@ -40,8 +40,8 @@ def complete_episode(
     db: Session = Depends(get_db),
 ):
     ensure_episode_access(user, episode_number)
-    episode_service.complete_episode(db, user, episode_number, data.time_spent_seconds)
-    return {"message": f"Episode {episode_number} completed successfully"}
+    advanced = episode_service.complete_episode(db, user, episode_number, data.time_spent_seconds)
+    return {"message": f"Episode {episode_number} completed successfully", "advanced": advanced}
 
 
 @router.post("/episodes/{episode_number}/quiz-response")

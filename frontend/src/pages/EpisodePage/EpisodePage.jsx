@@ -15,9 +15,11 @@ const episodeImages = {
   4: "/episode%204.jpg",
   5: "/episode%205.jpg",
   6: "/episode%206.jpg",
-  7: "/episode%206.jpg",
-  8: "/episode%206.jpg",
+  7: "/episode%207.jpg",
+  8: "/episode%208.jpg",
 };
+
+const TOTAL_EPISODES = 8;
 
 export default function EpisodePage() {
   const { episodeNumber } = useParams();
@@ -168,11 +170,33 @@ export default function EpisodePage() {
       const startedAt = startedAtRef.current || Date.now();
       const timeSpentSeconds = Math.floor((Date.now() - startedAt) / 1000);
 
-      await axios.post(
+      const completeRes = await axios.post(
         `${API_BASE_URL}/episodes/${episodeNumber}/complete`,
         { time_spent_seconds: timeSpentSeconds },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
+      // "advanced" is false when this was a review visit to an
+      // already-completed episode - only redirect to the post-questionnaire
+      // on a genuine first-time completion of the last episode.
+      const isLastEpisode =
+        Number(episodeNumber) === TOTAL_EPISODES && completeRes.data.advanced;
+
+      if (isLastEpisode) {
+        const meRes = await axios.get(`${API_BASE_URL}/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const participantId = meRes.data.azure_id;
+        localStorage.setItem("participant_id", participantId);
+
+        const redcapUrl = `${
+          import.meta.env.VITE_REDCAP_POSTQ_URL
+        }&participant_id=${encodeURIComponent(participantId)}`;
+
+        window.location.href = redcapUrl;
+        return;
+      }
 
       navigate("/");
     } catch (err) {

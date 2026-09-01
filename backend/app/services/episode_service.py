@@ -80,9 +80,19 @@ def start_episode(db: Session, user: User, episode_number: int) -> None:
     db.commit()
 
 
-def complete_episode(db: Session, user: User, episode_number: int, time_spent_seconds: int) -> None:
-    if episode_number != user.current_episode:
+def complete_episode(db: Session, user: User, episode_number: int, time_spent_seconds: int) -> bool:
+    """
+    Mark an episode complete. Returns True if this call advanced the
+    participant's progress (a genuine first-time completion), or False if it
+    was a review visit to an already-completed episode - in which case
+    progress metrics and current_episode are left untouched, preserving the
+    original completion data for research purposes.
+    """
+    if episode_number > user.current_episode:
         raise HTTPException(status_code=400, detail="Episode is locked")
+
+    if episode_number < user.current_episode:
+        return False
 
     episode = get_episode_or_404(db, episode_number)
     progress = _get_progress(db, user, episode)
@@ -106,6 +116,7 @@ def complete_episode(db: Session, user: User, episode_number: int, time_spent_se
 
     user.current_episode += 1
     db.commit()
+    return True
 
 
 def save_quiz_response(
