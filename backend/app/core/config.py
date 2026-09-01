@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     INACTIVITY_REMINDER_JOB_INTERVAL_MINUTES: int = 100
     PROGRESS_REMINDER_JOB_INTERVAL_MINUTES: int = 100
 
+
+    
+
     @property
     def openid_config_url(self) -> str:
         return (
