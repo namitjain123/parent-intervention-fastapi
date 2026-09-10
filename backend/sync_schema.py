@@ -24,6 +24,35 @@ from app.db.session import engine
 import app.models  # noqa: F401  - registers the models on Base.metadata
 
 
+def default_clause(column) -> str:
+    """
+    Return " DEFAULT <value>" for a column with a simple literal Integer or
+    Boolean default (e.g. Column(Integer, default=0)), so pre-existing rows
+    get that value on ALTER instead of NULL.
+
+    This matters because "NULL < N" is NULL in SQL, not True - a WHERE clause
+    treats that as no match, not as "0 < N". A counter column left NULL by a
+    plain ALTER TABLE silently and permanently excludes every pre-existing
+    row from any query that compares it with "<", even when it's obviously
+    overdue. This bit the pre-survey and post-survey reminder counters.
+
+    Returns "" for columns without a simple literal default (e.g. DateTime
+    columns, whose default is usually a callable like `lambda: datetime.now()`)
+    - NULL is the semantically correct value for those on old rows, since the
+    event they track genuinely never happened for that row.
+    """
+    default = column.default
+    if default is None or getattr(default, "is_callable", True):
+        return ""
+
+    value = default.arg
+    if isinstance(value, bool):
+        return f" DEFAULT {1 if value else 0}"
+    if isinstance(value, int):
+        return f" DEFAULT {value}"
+    return ""
+
+
 def find_missing_columns():
     inspector = inspect(engine)
     existing_tables = set(inspector.get_table_names())
@@ -59,8 +88,10 @@ def main():
     for table_name, column in missing:
         column_type = column.type.compile(dialect=engine.dialect)
         # Always NULLable: the table may already hold rows, and a NOT NULL column
-        # without a default would fail to add.
-        stmt = f'ALTER TABLE {table_name} ADD COLUMN {column.name} {column_type}'
+        # without a default would fail to add. Where the model has a simple
+        # literal default (e.g. Integer default=0), apply it via DEFAULT so
+        # pre-existing rows get that value instead of NULL - see default_clause().
+        stmt = f'ALTER TABLE {table_name} ADD COLUMN {column.name} {column_type}{default_clause(column)}'
         statements.append(stmt)
         print(f"  {table_name}.{column.name}  ({column_type})")
 

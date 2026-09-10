@@ -57,7 +57,13 @@ def get_users_needing_pre_survey_reminder(db):
 
     users = db.query(User).filter(
         User.pre_questionnaire_completed == False,
-        User.pre_survey_reminder_count < settings.PRE_SURVEY_REMINDER_MAX_COUNT,
+        # NULL < N is NULL in SQL (excluded by WHERE), not "0 < N" - rows
+        # added via ALTER TABLE before this column had a DEFAULT are NULL,
+        # not 0, so they must be treated as "never sent" explicitly.
+        (
+            (User.pre_survey_reminder_count == None) |
+            (User.pre_survey_reminder_count < settings.PRE_SURVEY_REMINDER_MAX_COUNT)
+        ),
         (
             (User.last_pre_survey_reminder_sent_at == None) &
             (User.created_at <= interval_cutoff)
@@ -86,7 +92,11 @@ def get_users_needing_post_survey_reminder(db):
 
     users = db.query(User).filter(
         User.post_questionnaire_completed == False,
-        User.post_survey_reminder_count < settings.POST_SURVEY_REMINDER_MAX_COUNT,
+        # Same NULL-vs-0 issue as the pre-survey query above.
+        (
+            (User.post_survey_reminder_count == None) |
+            (User.post_survey_reminder_count < settings.POST_SURVEY_REMINDER_MAX_COUNT)
+        ),
         User.all_episodes_completed_at.isnot(None),
         User.all_episodes_completed_at <= interval_cutoff,
         (
