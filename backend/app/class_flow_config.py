@@ -18,22 +18,25 @@ own teacher list, so the delayed teacher can differ per grade.
 # grade -> teacher_code -> {"name": <display name>, "flow": "A" | "B"}
 TEACHER_FLOW_CONFIG = {
     "7": {
-        "1": {"name": "Teacher 1", "flow": "A"},
-        "2": {"name": "Teacher 2", "flow": "A"},
-        "3": {"name": "Teacher 3", "flow": "A"},
-        "4": {"name": "Teacher 4", "flow": "B"},
+        "1": {"name": "Ms B Huynh", "flow": "A"},
+        "2": {"name": "Mrs A Reddy", "flow": "A"},
+        "3": {"name": "Mr T Greszewski", "flow": "A"},
+        "4": {"name": "Mrs J Piccin", "flow": "B"},
+        "5": {"name": "Mrs S Hudson", "flow": "B"},
     },
     "8": {
-        "1": {"name": "Teacher 1", "flow": "A"},
-        "2": {"name": "Teacher 2", "flow": "A"},
-        "3": {"name": "Teacher 3", "flow": "A"},
-        "4": {"name": "Teacher 4", "flow": "B"},
+        "1": {"name": "Mrs S Hudson", "flow": "A"},
+        "2": {"name": "Mrs J Piccin", "flow": "A"},
+        "3": {"name": "Ms A Gray", "flow": "B"},
+        "4": {"name": "Mr T Greszewski", "flow": "B"},
+        "5": {"name": "Ms J Zarebski", "flow": "B"},
     },
     "9": {
-        "1": {"name": "Teacher 1", "flow": "A"},
-        "2": {"name": "Teacher 2", "flow": "A"},
-        "3": {"name": "Teacher 3", "flow": "A"},
-        "4": {"name": "Teacher 4", "flow": "B"},
+        "1": {"name": "Mr T Greszewski", "flow": "A"},
+        "2": {"name": "Mrs J Piccin", "flow": "A"},
+        "3": {"name": "Ms A Gray", "flow": "A"},
+        "4": {"name": "Ms M van Bever Donker", "flow": "B"},
+        "5": {"name": "Ms B Huynh", "flow": "B"},
     },
 }
 
