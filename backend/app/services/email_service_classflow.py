@@ -34,7 +34,7 @@ def send_class_b_lock_email(to_email: str):
         """
         <p>Dear Parent/Caregiver,</p>
         <p>Thank you for completing the baseline survey.</p>
-        <p>The episodes are not open yet. They will begin in about one month, and we will email you when the first episode is ready.</p>
+        <p>The episodes are not open yet. They will begin in about 28 days, and we will email you when the first episode is ready.</p>
         <p>Kind regards,</p>
         <p>The Research Team</p>
         """

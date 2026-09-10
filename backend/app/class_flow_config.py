@@ -6,7 +6,7 @@ that grade, a TEACHER. Which flow a participant follows is decided here by the
 selected teacher:
 
     flow "A" -> normal flow      (episode unlocks immediately)
-    flow "B" -> delayed flow      (lock email, 30-day wait, delayed survey, then unlock)
+    flow "B" -> delayed flow      (lock email, 28-day wait, delayed survey, then unlock)
 
 REDCap sends the teacher's CODED value (the value, not the label). Keep the keys
 below in sync with the coded values configured in the REDCap teacher dropdowns.
