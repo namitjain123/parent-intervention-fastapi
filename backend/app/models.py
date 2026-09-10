@@ -43,6 +43,12 @@ class User(Base):
     last_pre_survey_reminder_sent_at = Column(DateTime, nullable=True)
     pre_survey_reminder_count = Column(Integer, default=0)
 
+    # Post-test nudge: all episodes done but the post-questionnaire isn't.
+    # Set once, the moment current_episode crosses the last episode.
+    all_episodes_completed_at = Column(DateTime, nullable=True)
+    last_post_survey_reminder_sent_at = Column(DateTime, nullable=True)
+    post_survey_reminder_count = Column(Integer, default=0)
+
     # =========================
     # DELAYED SURVEY SYSTEM (CLASS B)
     # =========================

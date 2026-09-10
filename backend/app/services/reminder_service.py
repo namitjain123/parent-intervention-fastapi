@@ -73,3 +73,34 @@ def mark_pre_survey_reminder_sent(user, db):
     user.pre_survey_reminder_count = (user.pre_survey_reminder_count or 0) + 1
     db.commit()
     db.refresh(user)
+
+
+def get_users_needing_post_survey_reminder(db):
+    """
+    Completed all episodes (all_episodes_completed_at is set) but never
+    completed the post-questionnaire. Reminded every
+    POST_SURVEY_REMINDER_INTERVAL_MINUTES since finishing the last episode
+    (or since their last reminder), up to POST_SURVEY_REMINDER_MAX_COUNT times.
+    """
+    now = datetime.now(timezone.utc)
+    interval_cutoff = now - timedelta(minutes=settings.POST_SURVEY_REMINDER_INTERVAL_MINUTES)
+
+    users = db.query(User).filter(
+        User.post_questionnaire_completed == False,
+        User.post_survey_reminder_count < settings.POST_SURVEY_REMINDER_MAX_COUNT,
+        User.all_episodes_completed_at.isnot(None),
+        User.all_episodes_completed_at <= interval_cutoff,
+        (
+            (User.last_post_survey_reminder_sent_at == None) |
+            (User.last_post_survey_reminder_sent_at <= interval_cutoff)
+        )
+    ).all()
+
+    return users
+
+
+def mark_post_survey_reminder_sent(user, db):
+    user.last_post_survey_reminder_sent_at = datetime.now(timezone.utc)
+    user.post_survey_reminder_count = (user.post_survey_reminder_count or 0) + 1
+    db.commit()
+    db.refresh(user)

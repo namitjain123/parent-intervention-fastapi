@@ -115,6 +115,11 @@ def complete_episode(db: Session, user: User, episode_number: int, time_spent_se
         progress.time_spent_seconds = time_spent_seconds
 
     user.current_episode += 1
+
+    # 8 matches the "all_episodes_completed" threshold in user_service.py.
+    if user.current_episode > 8 and not user.all_episodes_completed_at:
+        user.all_episodes_completed_at = now
+
     db.commit()
     return True
 

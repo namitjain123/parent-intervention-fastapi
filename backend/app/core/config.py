@@ -45,8 +45,14 @@ class Settings(BaseSettings):
     PRE_SURVEY_REMINDER_INTERVAL_MINUTES: int = 10
     PRE_SURVEY_REMINDER_MAX_COUNT: int = 7
 
-
-    
+    # Post-test nudge: all 8 episodes done but the post-questionnaire isn't.
+    # Sent every POST_SURVEY_REMINDER_INTERVAL_MINUTES since completing the
+    # last episode (or since the last reminder), up to
+    # POST_SURVEY_REMINDER_MAX_COUNT times. In minutes for testing;
+    # production value is 2 days = 2880.
+    POST_SURVEY_REMINDER_JOB_INTERVAL_MINUTES: int = 10
+    POST_SURVEY_REMINDER_INTERVAL_MINUTES: int = 10
+    POST_SURVEY_REMINDER_MAX_COUNT: int = 5
 
     @property
     def openid_config_url(self) -> str:
