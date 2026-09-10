@@ -465,7 +465,7 @@ export default function EpisodePage() {
               </p>
 
               <button onClick={markComplete} className={styles.continueButton}>
-                Continue →
+                Complete
               </button>
             </div>
           </div>

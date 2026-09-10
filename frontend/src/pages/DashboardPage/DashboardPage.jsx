@@ -423,6 +423,34 @@ export default function DashboardPage() {
               })}
             </div>
 
+            {allEpisodesCompleted && !dashboard.post_questionnaire_completed && (
+              <div className={styles.postQuestionnaireCard}>
+                <div className={styles.cardTop}>
+                  <div className={styles.cardBadge}>Final Step</div>
+                  <div className={styles.estimate}>Estimated time: 5–10 mins</div>
+                </div>
+
+                <h2 className={styles.cardTitle}>Post-test required</h2>
+
+                <p className={styles.cardText}>
+                  You have completed all 8 episodes. Please complete the final
+                  post-test to finish the program.
+                </p>
+
+                <button
+                  className={styles.primaryButton}
+                  onClick={openPostQuestionnaire}
+                >
+                  Start Post-test
+                </button>
+
+                <div className={styles.noteBox}>
+                  If you started the post-test but didn't finish it, use this
+                  button to return and complete it.
+                </div>
+              </div>
+            )}
+
             {allEpisodesCompleted && dashboard.post_questionnaire_completed && (
               <div className={styles.postQuestionnaireCard}>
                 <div className={styles.cardTop}>
