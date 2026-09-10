@@ -39,6 +39,10 @@ class User(Base):
     reminder_count = Column(Integer, default=0)
     midway_reminder_sent_at = Column(DateTime, nullable=True)
 
+    # Pre-questionnaire nudge: registered but never started the pre-questionnaire
+    last_pre_survey_reminder_sent_at = Column(DateTime, nullable=True)
+    pre_survey_reminder_count = Column(Integer, default=0)
+
     # =========================
     # DELAYED SURVEY SYSTEM (CLASS B)
     # =========================

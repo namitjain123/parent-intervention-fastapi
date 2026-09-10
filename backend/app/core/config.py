@@ -36,6 +36,14 @@ class Settings(BaseSettings):
     DELAYED_UNLOCK_JOB_INTERVAL_MINUTES: int = 1
     INACTIVITY_REMINDER_JOB_INTERVAL_MINUTES: int = 100
     PROGRESS_REMINDER_JOB_INTERVAL_MINUTES: int = 100
+    PRE_SURVEY_REMINDER_JOB_INTERVAL_MINUTES: int = 10
+
+    # Pre-questionnaire nudge: registered but never started the pre-questionnaire.
+    # Sent every PRE_SURVEY_REMINDER_INTERVAL_MINUTES, up to PRE_SURVEY_REMINDER_MAX_COUNT
+    # times. In minutes (not days) so it can be sped up for testing, same as
+    # DELAYED_SURVEY_UNLOCK_MINUTES above. Production value should be 2 days = 2880.
+    PRE_SURVEY_REMINDER_INTERVAL_MINUTES: int = 10
+    PRE_SURVEY_REMINDER_MAX_COUNT: int = 7
 
 
     

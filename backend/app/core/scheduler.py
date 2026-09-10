@@ -2,13 +2,19 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from app.core.config import settings
 from app.db.session import SessionLocal
-from app.services.email_service import send_reminder_email, send_25day_progress_reminder
+from app.services.email_service import (
+    send_reminder_email,
+    send_25day_progress_reminder,
+    send_pre_survey_reminder_email,
+)
 from app.services.episode_access import process_delayed_survey_unlocks
 from app.services.reminder_service import (
     get_users_needing_form_reminder,
     get_users_needing_25day_progress_reminder,
+    get_users_needing_pre_survey_reminder,
     mark_reminder_sent,
     mark_midway_reminder_sent,
+    mark_pre_survey_reminder_sent,
 )
 
 scheduler = BackgroundScheduler()
@@ -54,6 +60,23 @@ def scheduled_send_25day_reminders():
         db.close()
 
 
+def scheduled_send_pre_survey_reminders():
+    db = SessionLocal()
+    try:
+        users = get_users_needing_pre_survey_reminder(db)
+        print(f"[Reminder] Found {len(users)} users needing pre-survey reminders")
+        for user in users:
+            reminder_number = (user.pre_survey_reminder_count or 0) + 1
+            try:
+                send_pre_survey_reminder_email(user.email, user.name, reminder_number)
+                print(f"[Reminder] Pre-survey reminder {reminder_number} sent to {user.email}")
+            except Exception as e:
+                print(f"[Reminder] Pre-survey reminder failed for {user.email}: {e}")
+            mark_pre_survey_reminder_sent(user, db)
+    finally:
+        db.close()
+
+
 def start_scheduler():
     scheduler.add_job(
         scheduled_process_delayed_unlocks,
@@ -75,6 +98,13 @@ def start_scheduler():
         "interval",
         minutes=settings.PROGRESS_REMINDER_JOB_INTERVAL_MINUTES,
         id="25day_progress_reminder_job",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        scheduled_send_pre_survey_reminders,
+        "interval",
+        minutes=settings.PRE_SURVEY_REMINDER_JOB_INTERVAL_MINUTES,
+        id="pre_survey_reminder_job",
         replace_existing=True,
     )
     scheduler.start()
