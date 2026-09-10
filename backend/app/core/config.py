@@ -36,15 +36,15 @@ class Settings(BaseSettings):
     # wait is up; the reminder jobs check hourly since their thresholds are
     # measured in days - checking every minute for those was pure overhead
     # and caused APScheduler's "maximum instances reached" overlap warnings.
-    DELAYED_UNLOCK_JOB_INTERVAL_MINUTES: int = 1
-    INACTIVITY_REMINDER_JOB_INTERVAL_MINUTES: int = 60
-    PROGRESS_REMINDER_JOB_INTERVAL_MINUTES: int = 60
-    PRE_SURVEY_REMINDER_JOB_INTERVAL_MINUTES: int = 60
-    POST_SURVEY_REMINDER_JOB_INTERVAL_MINUTES: int = 60
+    DELAYED_UNLOCK_JOB_INTERVAL_MINUTES: int = 2
+    INACTIVITY_REMINDER_JOB_INTERVAL_MINUTES: int = 2
+    PROGRESS_REMINDER_JOB_INTERVAL_MINUTES: int = 2
+    PRE_SURVEY_REMINDER_JOB_INTERVAL_MINUTES: int = 2
+    POST_SURVEY_REMINDER_JOB_INTERVAL_MINUTES: int = 2
 
     # Inactivity nudge: post-Q not done, inactive this long. Repeats at the
     # same interval. 7 days = 10080 minutes.
-    INACTIVITY_REMINDER_INTERVAL_MINUTES: int = 10080
+    INACTIVITY_REMINDER_INTERVAL_MINUTES: int = 2
 
     # Progress nudge: post-Q not done, account this old. Sent once only.
     # 21 days = 30240 minutes.
@@ -53,15 +53,15 @@ class Settings(BaseSettings):
     # Pre-questionnaire nudge: registered but never started the pre-questionnaire.
     # Sent every PRE_SURVEY_REMINDER_INTERVAL_MINUTES, up to PRE_SURVEY_REMINDER_MAX_COUNT
     # times. 2 days = 2880 minutes.
-    PRE_SURVEY_REMINDER_INTERVAL_MINUTES: int = 2880
-    PRE_SURVEY_REMINDER_MAX_COUNT: int = 7
+    PRE_SURVEY_REMINDER_INTERVAL_MINUTES: int = 1
+    PRE_SURVEY_REMINDER_MAX_COUNT: int = 1
 
     # Post-test nudge: all 8 episodes done but the post-questionnaire isn't.
     # Sent every POST_SURVEY_REMINDER_INTERVAL_MINUTES since completing the
     # last episode (or since the last reminder), up to
     # POST_SURVEY_REMINDER_MAX_COUNT times. 2 days = 2880 minutes.
-    POST_SURVEY_REMINDER_INTERVAL_MINUTES: int = 2880
-    POST_SURVEY_REMINDER_MAX_COUNT: int = 5
+    POST_SURVEY_REMINDER_INTERVAL_MINUTES: int =1
+    POST_SURVEY_REMINDER_MAX_COUNT: int = 1
 
     @property
     def openid_config_url(self) -> str:
