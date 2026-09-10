@@ -5,15 +5,14 @@ from app.models import User
 
 def get_users_needing_form_reminder(db):
     now = datetime.now(timezone.utc)
-    inactivity_cutoff = now - timedelta(days=7)
-    reminder_cutoff = now - timedelta(days=7)
+    cutoff = now - timedelta(minutes=settings.INACTIVITY_REMINDER_INTERVAL_MINUTES)
 
     users = db.query(User).filter(
         User.post_questionnaire_completed == False,
-        User.last_activity_at <= inactivity_cutoff,
+        User.last_activity_at <= cutoff,
         (
             (User.last_reminder_sent_at == None) |
-            (User.last_reminder_sent_at <= reminder_cutoff)
+            (User.last_reminder_sent_at <= cutoff)
         )
     ).all()
 
@@ -22,7 +21,7 @@ def get_users_needing_form_reminder(db):
 
 def get_users_needing_25day_progress_reminder(db):
     now = datetime.now(timezone.utc)
-    progress_cutoff = now - timedelta(days=21)
+    progress_cutoff = now - timedelta(minutes=settings.PROGRESS_REMINDER_INTERVAL_MINUTES)
 
     users = db.query(User).filter(
         User.post_questionnaire_completed == False,

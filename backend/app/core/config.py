@@ -31,18 +31,26 @@ class Settings(BaseSettings):
     # Production value should be 30 days per class_flow_config.py's flow description.
     DELAYED_SURVEY_UNLOCK_MINUTES: int = 1
 
-    # Scheduler intervals (minutes)
-    # TODO: change to daily intervals (60 * 24) after testing, per original main.py TODO.
+    # Scheduler intervals (minutes) - how OFTEN each job checks, not the
+    # actual eligibility threshold. Everything below is set to 1 for testing.
     DELAYED_UNLOCK_JOB_INTERVAL_MINUTES: int = 1
-    INACTIVITY_REMINDER_JOB_INTERVAL_MINUTES: int = 100
-    PROGRESS_REMINDER_JOB_INTERVAL_MINUTES: int = 100
-    PRE_SURVEY_REMINDER_JOB_INTERVAL_MINUTES: int = 10
+    INACTIVITY_REMINDER_JOB_INTERVAL_MINUTES: int = 1
+    PROGRESS_REMINDER_JOB_INTERVAL_MINUTES: int = 1
+    PRE_SURVEY_REMINDER_JOB_INTERVAL_MINUTES: int = 1
+    POST_SURVEY_REMINDER_JOB_INTERVAL_MINUTES: int = 1
+
+    # Inactivity nudge: post-Q not done, inactive this long. Repeats at the
+    # same interval. In minutes for testing; production value is 7 days = 10080.
+    INACTIVITY_REMINDER_INTERVAL_MINUTES: int = 1
+
+    # Progress nudge: post-Q not done, account this old. Sent once only.
+    # In minutes for testing; production value is 21 days = 30240.
+    PROGRESS_REMINDER_INTERVAL_MINUTES: int = 1
 
     # Pre-questionnaire nudge: registered but never started the pre-questionnaire.
     # Sent every PRE_SURVEY_REMINDER_INTERVAL_MINUTES, up to PRE_SURVEY_REMINDER_MAX_COUNT
-    # times. In minutes (not days) so it can be sped up for testing, same as
-    # DELAYED_SURVEY_UNLOCK_MINUTES above. Production value should be 2 days = 2880.
-    PRE_SURVEY_REMINDER_INTERVAL_MINUTES: int = 10
+    # times. In minutes for testing; production value is 2 days = 2880.
+    PRE_SURVEY_REMINDER_INTERVAL_MINUTES: int = 1
     PRE_SURVEY_REMINDER_MAX_COUNT: int = 7
 
     # Post-test nudge: all 8 episodes done but the post-questionnaire isn't.
@@ -50,8 +58,7 @@ class Settings(BaseSettings):
     # last episode (or since the last reminder), up to
     # POST_SURVEY_REMINDER_MAX_COUNT times. In minutes for testing;
     # production value is 2 days = 2880.
-    POST_SURVEY_REMINDER_JOB_INTERVAL_MINUTES: int = 10
-    POST_SURVEY_REMINDER_INTERVAL_MINUTES: int = 10
+    POST_SURVEY_REMINDER_INTERVAL_MINUTES: int = 1
     POST_SURVEY_REMINDER_MAX_COUNT: int = 5
 
     @property
