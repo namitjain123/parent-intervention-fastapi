@@ -27,6 +27,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Sync database schema
+        # Adds any columns present in app/models.py but missing from the live
+        # database - additive only, never drops or alters existing columns.
+        # Runs BEFORE deploy so new columns exist before the new code (which
+        # may query them) goes live, closing the gap that has broken
+        # production every time a model gained a field without this step.
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TENANT_ID: unused-for-schema-sync
+          CLIENT_ID: unused-for-schema-sync
+        run: python sync_schema.py --apply
+
       - name: Zip backend
         run: zip -r ../backend.zip .
 
