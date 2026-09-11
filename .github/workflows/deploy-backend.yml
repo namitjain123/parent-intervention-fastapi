@@ -10,13 +10,17 @@ on:
       - "backend/**"
       - ".github/workflows/deploy-backend.yml"
 
-# Each deploy uploads a full package and the last one to finish wins, so two
-# overlapping runs can let an older commit overwrite a newer one (this
-# happened: 8a1f03e started first but finished after d9db77c). A newer push
-# now cancels any deploy still in flight.
+# Run deploys one at a time. Overlapping runs let an older commit overwrite
+# a newer one (8a1f03e started first but finished after d9db77c).
+#
+# Queue rather than cancel: cancelling a run mid-deploy doesn't stop the
+# package Azure is already processing, so the next run hits a busy App
+# Service and fails with 409 Conflict (3b5cb16 cancelled -> b431253 409).
+# GitHub still drops any *pending* run that a newer push supersedes, so the
+# newest commit is always the one that lands.
 concurrency:
   group: deploy-backend
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build-and-deploy:
