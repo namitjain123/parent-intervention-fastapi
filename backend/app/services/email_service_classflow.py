@@ -1,6 +1,5 @@
-from azure.communication.email import EmailClient
-
 from app.core.config import settings
+from app.services.email_service import make_email_client
 
 
 def send_email(to_email: str, subject: str, html_content: str):
@@ -8,7 +7,7 @@ def send_email(to_email: str, subject: str, html_content: str):
         print("Azure email not configured")
         return
 
-    client = EmailClient.from_connection_string(settings.AZURE_COMMUNICATION_CONNECTION_STRING)
+    client = make_email_client()
 
     message = {
         "senderAddress": settings.AZURE_EMAIL_SENDER,

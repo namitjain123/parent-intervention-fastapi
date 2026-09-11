@@ -3,8 +3,27 @@ from azure.communication.email import EmailClient
 from app.core.config import settings
 
 
+def make_email_client() -> EmailClient:
+    """
+    EmailClient with bounded retries and network timeouts.
+
+    The SDK defaults are 10 retries (honouring Retry-After on throttling) and
+    300s connect/read timeouts, all inside begin_send() - so one throttled
+    send could block its caller for many minutes, long before the
+    poller.result() timeout below is even reached. That wedged the scheduler
+    jobs ("maximum number of running instances reached") and hung Class B
+    pre-questionnaire completion, which sends its email inline.
+    """
+    return EmailClient.from_connection_string(
+        settings.AZURE_COMMUNICATION_CONNECTION_STRING,
+        retry_total=1,
+        connection_timeout=10,
+        read_timeout=20,
+    )
+
+
 def send_reminder_email(to_email: str, user_name: str):
-    client = EmailClient.from_connection_string(settings.AZURE_COMMUNICATION_CONNECTION_STRING)
+    client = make_email_client()
 
     message = {
         "senderAddress": settings.AZURE_EMAIL_SENDER,
@@ -54,7 +73,7 @@ The Research Team
 
 
 def send_pre_survey_reminder_email(to_email: str, user_name: str, reminder_number: int):
-    client = EmailClient.from_connection_string(settings.AZURE_COMMUNICATION_CONNECTION_STRING)
+    client = make_email_client()
 
     message = {
         "senderAddress": settings.AZURE_EMAIL_SENDER,
@@ -104,7 +123,7 @@ The Research Team
 
 
 def send_post_survey_reminder_email(to_email: str, user_name: str, reminder_number: int):
-    client = EmailClient.from_connection_string(settings.AZURE_COMMUNICATION_CONNECTION_STRING)
+    client = make_email_client()
 
     message = {
         "senderAddress": settings.AZURE_EMAIL_SENDER,
@@ -156,7 +175,7 @@ The Research Team
 
 
 def send_25day_progress_reminder(to_email: str, user_name: str):
-    client = EmailClient.from_connection_string(settings.AZURE_COMMUNICATION_CONNECTION_STRING)
+    client = make_email_client()
 
     message = {
         "senderAddress": settings.AZURE_EMAIL_SENDER,

@@ -1,3 +1,6 @@
+import os
+import tempfile
+
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from app.core.config import settings
@@ -21,6 +24,37 @@ from app.services.reminder_service import (
 )
 
 scheduler = BackgroundScheduler()
+
+# Held open for the life of the process that owns the scheduler.
+_scheduler_lock_file = None
+
+
+def _acquire_scheduler_lock() -> bool:
+    """
+    Gunicorn runs several worker processes (-w 2 in production), and each one
+    runs the app's startup - so without this, every worker starts its own
+    scheduler and every reminder email is sent once per worker. An exclusive
+    non-blocking file lock lets exactly one process win. The OS releases it
+    if that process dies, so a restarted worker can pick it back up.
+    """
+    global _scheduler_lock_file
+
+    try:
+        import fcntl
+    except ImportError:
+        # Windows (local dev) - a single uvicorn process, nothing to dedupe.
+        return True
+
+    lock_path = os.path.join(tempfile.gettempdir(), "parent_intervention_scheduler.lock")
+    lock_file = open(lock_path, "w")
+    try:
+        fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        lock_file.close()
+        return False
+
+    _scheduler_lock_file = lock_file
+    return True
 
 
 def scheduled_process_delayed_unlocks():
@@ -98,6 +132,10 @@ def scheduled_send_post_survey_reminders():
 
 
 def start_scheduler():
+    if not _acquire_scheduler_lock():
+        print(f"Scheduler already running in another worker - skipping in pid {os.getpid()}")
+        return
+
     scheduler.add_job(
         scheduled_process_delayed_unlocks,
         "interval",
@@ -139,5 +177,7 @@ def start_scheduler():
 
 
 def stop_scheduler():
-    scheduler.shutdown()
-    print("Scheduler stopped")
+    # Workers that lost the lock never started it; shutdown() would raise.
+    if scheduler.running:
+        scheduler.shutdown()
+        print("Scheduler stopped")

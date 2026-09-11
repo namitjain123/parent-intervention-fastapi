@@ -1,5 +1,12 @@
 import os
+import sys
 from contextlib import asynccontextmanager
+
+# Under gunicorn stdout isn't a terminal, so Python block-buffers print()
+# output and it can sit unflushed indefinitely - none of the scheduler's
+# "[Reminder] ..." lines ever reached the Azure log stream. Line-buffering
+# flushes each line as it's printed.
+sys.stdout.reconfigure(line_buffering=True)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
