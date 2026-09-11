@@ -28,7 +28,7 @@ class Settings(BaseSettings):
 
     # Study flow timing.
     # Class B wait: 28 days = 40320 minutes (matches the unlock email subject).
-    DELAYED_SURVEY_UNLOCK_MINUTES: int = 40320
+    DELAYED_SURVEY_UNLOCK_MINUTES: int = 2
 
     # Scheduler intervals (minutes) - how OFTEN each job checks, not the
     # actual eligibility threshold. Delayed-unlock stays frequent since it's a
@@ -44,11 +44,11 @@ class Settings(BaseSettings):
 
     # Inactivity nudge: post-Q not done, inactive this long. Repeats at the
     # same interval. 7 days = 10080 minutes.
-    INACTIVITY_REMINDER_INTERVAL_MINUTES: int = 10080
+    INACTIVITY_REMINDER_INTERVAL_MINUTES: int = 5
 
     # Progress nudge: post-Q not done, account this old. Sent once only.
     # 21 days = 30240 minutes.
-    PROGRESS_REMINDER_INTERVAL_MINUTES: int = 30240
+    PROGRESS_REMINDER_INTERVAL_MINUTES: int = 2
 
     # Pre-questionnaire nudge: registered but never started the pre-questionnaire.
     # Sent every PRE_SURVEY_REMINDER_INTERVAL_MINUTES, up to PRE_SURVEY_REMINDER_MAX_COUNT
