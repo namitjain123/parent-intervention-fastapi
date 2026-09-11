@@ -22,7 +22,16 @@ def send_email(to_email: str, subject: str, html_content: str):
     }
 
     poller = client.begin_send(message)
-    result = poller.result()
+    # poller.result(timeout=N) does not raise on timeout - it just stops
+    # waiting and returns whatever is available, even if the send never
+    # completed. Without checking done() explicitly, a hung Azure
+    # Communication Services call would block this call indefinitely
+    # (this function used to run inline inside an HTTP request), and the
+    # caller's try/except would never fire since nothing ever raised.
+    result = poller.result(timeout=30)
+
+    if not poller.done():
+        raise TimeoutError(f"Email send to {to_email} did not complete within 30s")
 
     print("Email sent:", result)
 

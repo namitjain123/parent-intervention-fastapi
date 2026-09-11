@@ -40,7 +40,17 @@ The Research Team
     }
 
     poller = client.begin_send(message)
-    return poller.result()
+    # poller.result(timeout=N) does not raise on timeout - it just stops
+    # waiting and returns whatever is available. Without checking done()
+    # explicitly, a hung Azure Communication Services call would block the
+    # scheduler job that called this indefinitely, with nothing ever
+    # raising to trigger the caller's own except-and-continue handling.
+    result = poller.result(timeout=30)
+
+    if not poller.done():
+        raise TimeoutError(f"Email send to {to_email} did not complete within 30s")
+
+    return result
 
 
 def send_pre_survey_reminder_email(to_email: str, user_name: str, reminder_number: int):
@@ -80,7 +90,17 @@ The Research Team
     }
 
     poller = client.begin_send(message)
-    return poller.result()
+    # poller.result(timeout=N) does not raise on timeout - it just stops
+    # waiting and returns whatever is available. Without checking done()
+    # explicitly, a hung Azure Communication Services call would block the
+    # scheduler job that called this indefinitely, with nothing ever
+    # raising to trigger the caller's own except-and-continue handling.
+    result = poller.result(timeout=30)
+
+    if not poller.done():
+        raise TimeoutError(f"Email send to {to_email} did not complete within 30s")
+
+    return result
 
 
 def send_post_survey_reminder_email(to_email: str, user_name: str, reminder_number: int):
@@ -122,7 +142,17 @@ The Research Team
     }
 
     poller = client.begin_send(message)
-    return poller.result()
+    # poller.result(timeout=N) does not raise on timeout - it just stops
+    # waiting and returns whatever is available. Without checking done()
+    # explicitly, a hung Azure Communication Services call would block the
+    # scheduler job that called this indefinitely, with nothing ever
+    # raising to trigger the caller's own except-and-continue handling.
+    result = poller.result(timeout=30)
+
+    if not poller.done():
+        raise TimeoutError(f"Email send to {to_email} did not complete within 30s")
+
+    return result
 
 
 def send_25day_progress_reminder(to_email: str, user_name: str):
@@ -150,4 +180,14 @@ The Research Team
     }
 
     poller = client.begin_send(message)
-    return poller.result()
+    # poller.result(timeout=N) does not raise on timeout - it just stops
+    # waiting and returns whatever is available. Without checking done()
+    # explicitly, a hung Azure Communication Services call would block the
+    # scheduler job that called this indefinitely, with nothing ever
+    # raising to trigger the caller's own except-and-continue handling.
+    result = poller.result(timeout=30)
+
+    if not poller.done():
+        raise TimeoutError(f"Email send to {to_email} did not complete within 30s")
+
+    return result
