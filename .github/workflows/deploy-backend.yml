@@ -5,6 +5,14 @@ on:
     branches:
       - updating_episode_and_website_ui
 
+# Each deploy uploads a full package and the last one to finish wins, so two
+# overlapping runs can let an older commit overwrite a newer one (this
+# happened: 8a1f03e started first but finished after d9db77c). A newer push
+# now cancels any deploy still in flight.
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: true
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
