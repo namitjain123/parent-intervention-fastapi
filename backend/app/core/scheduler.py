@@ -11,7 +11,10 @@ from app.services.email_service import (
     send_pre_survey_reminder_email,
     send_post_survey_reminder_email,
 )
-from app.services.episode_access import process_delayed_survey_unlocks
+from app.services.episode_access import (
+    process_delayed_survey_unlocks,
+    send_pending_lock_emails,
+)
 from app.services.reminder_service import (
     get_users_needing_form_reminder,
     get_users_needing_25day_progress_reminder,
@@ -60,6 +63,7 @@ def _acquire_scheduler_lock() -> bool:
 def scheduled_process_delayed_unlocks():
     db = SessionLocal()
     try:
+        send_pending_lock_emails(db)
         process_delayed_survey_unlocks(db)
     finally:
         db.close()
@@ -73,10 +77,11 @@ def scheduled_send_inactivity_reminders():
         for user in users:
             try:
                 send_reminder_email(user.email, user.name)
+                mark_reminder_sent(user, db)  # only once Azure accepts it
                 print(f"[Reminder] Inactivity email sent to {user.email}")
             except Exception as e:
-                print(f"[Reminder] Inactivity email failed for {user.email}: {e}")
-            mark_reminder_sent(user, db)
+                db.rollback()
+                print(f"[Reminder] Inactivity email failed for {user.email}: {e} - will retry next cycle")
     finally:
         db.close()
 
@@ -89,10 +94,11 @@ def scheduled_send_25day_reminders():
         for user in users:
             try:
                 send_25day_progress_reminder(user.email, user.name)
+                mark_midway_reminder_sent(user, db)  # only once Azure accepts it
                 print(f"[Reminder] 25-day email sent to {user.email}")
             except Exception as e:
-                print(f"[Reminder] 25-day email failed for {user.email}: {e}")
-            mark_midway_reminder_sent(user, db)
+                db.rollback()
+                print(f"[Reminder] 25-day email failed for {user.email}: {e} - will retry next cycle")
     finally:
         db.close()
 
@@ -106,10 +112,11 @@ def scheduled_send_pre_survey_reminders():
             reminder_number = (user.pre_survey_reminder_count or 0) + 1
             try:
                 send_pre_survey_reminder_email(user.email, user.name, reminder_number)
+                mark_pre_survey_reminder_sent(user, db)  # only once Azure accepts it
                 print(f"[Reminder] Pre-survey reminder {reminder_number} sent to {user.email}")
             except Exception as e:
-                print(f"[Reminder] Pre-survey reminder failed for {user.email}: {e}")
-            mark_pre_survey_reminder_sent(user, db)
+                db.rollback()
+                print(f"[Reminder] Pre-survey reminder failed for {user.email}: {e} - will retry next cycle")
     finally:
         db.close()
 
@@ -123,10 +130,11 @@ def scheduled_send_post_survey_reminders():
             reminder_number = (user.post_survey_reminder_count or 0) + 1
             try:
                 send_post_survey_reminder_email(user.email, user.name, reminder_number)
+                mark_post_survey_reminder_sent(user, db)  # only once Azure accepts it
                 print(f"[Reminder] Post-survey reminder {reminder_number} sent to {user.email}")
             except Exception as e:
-                print(f"[Reminder] Post-survey reminder failed for {user.email}: {e}")
-            mark_post_survey_reminder_sent(user, db)
+                db.rollback()
+                print(f"[Reminder] Post-survey reminder failed for {user.email}: {e} - will retry next cycle")
     finally:
         db.close()
 

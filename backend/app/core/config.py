@@ -44,7 +44,7 @@ class Settings(BaseSettings):
 
     # Inactivity nudge: post-Q not done, inactive this long. Repeats at the
     # same interval. 7 days = 10080 minutes.
-    INACTIVITY_REMINDER_INTERVAL_MINUTES: int = 2
+    INACTIVITY_REMINDER_INTERVAL_MINUTES: int = 10080
 
     # Progress nudge: post-Q not done, account this old. Sent once only.
     # 21 days = 30240 minutes.

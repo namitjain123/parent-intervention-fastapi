@@ -1,20 +1,11 @@
 from datetime import datetime, timedelta, timezone
 
-from fastapi import BackgroundTasks, HTTPException
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.class_flow_config import resolve_flow
 from app.core.config import settings
 from app.models import User
-from app.services.email_service_classflow import send_class_b_lock_email
-
-
-def _send_lock_email(email: str):
-    try:
-        send_class_b_lock_email(email)
-        print(f"Lock email sent to {email}")
-    except Exception as e:
-        print(f"Lock email failed for {email}: {e}")
 
 
 def _get_user_or_404(db: Session, participant_id: str) -> User:
@@ -25,11 +16,7 @@ def _get_user_or_404(db: Session, participant_id: str) -> User:
 
 
 def complete_pre_questionnaire(
-    db: Session,
-    participant_id: str,
-    grade: str,
-    teacher: str,
-    background_tasks: BackgroundTasks,
+    db: Session, participant_id: str, grade: str, teacher: str
 ) -> User:
     db_user = _get_user_or_404(db, participant_id)
 
@@ -67,13 +54,9 @@ def complete_pre_questionnaire(
         )
         db_user.current_episode = 0
 
-        if not db_user.lock_email_sent_at:
-            # Sent after the response goes out, not inline: a send can take
-            # up to a minute if Azure is slow or throttling, and the
-            # participant's "Completing pre-questionnaire" page - and this
-            # commit - would sit waiting on it.
-            background_tasks.add_task(_send_lock_email, db_user.email)
-            db_user.lock_email_sent_at = now
+        # The "episodes will open soon" email is sent by the scheduler
+        # (send_pending_lock_emails), not here: it's retried if Azure throttles
+        # or a restart cuts it off, and the participant's page never waits on it.
 
         db_user.unlock_email_sent_at = None
 
