@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
@@ -12,12 +12,14 @@ router = APIRouter(tags=["questionnaires"])
 
 @router.post("/mark-prequestionnaire-complete")
 def mark_prequestionnaire_complete(
-    data: CompletePreQRequest, db: Session = Depends(get_db)
+    data: CompletePreQRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
 ):
     print("DATA RECEIVED:", data)
 
     db_user = questionnaire_service.complete_pre_questionnaire(
-        db, data.participant_id, data.grade, data.teacher
+        db, data.participant_id, data.grade, data.teacher, background_tasks
     )
 
     return {
