@@ -1,13 +1,21 @@
 name: Azure Static Web Apps CI/CD
 
+# Only run when the frontend (or this workflow) changes - backend-only
+# commits shouldn't rebuild and redeploy the static site.
 on:
   push:
     branches:
       - updating_episode_and_website_ui
+    paths:
+      - "frontend/**"
+      - ".github/workflows/azure-static-web-apps-gray-sea-01865ef00.yml"
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
       - updating_episode_and_website_ui
+    paths:
+      - "frontend/**"
+      - ".github/workflows/azure-static-web-apps-gray-sea-01865ef00.yml"
 
 jobs:
   build_and_deploy_job:

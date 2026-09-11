@@ -1,9 +1,14 @@
 name: Deploy FastAPI Backend to Azure
 
+# Only run when the backend (or this workflow) changes - frontend-only
+# commits shouldn't redeploy and restart the API.
 on:
   push:
     branches:
       - updating_episode_and_website_ui
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy-backend.yml"
 
 # Each deploy uploads a full package and the last one to finish wins, so two
 # overlapping runs can let an older commit overwrite a newer one (this
