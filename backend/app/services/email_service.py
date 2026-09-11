@@ -5,18 +5,22 @@ from app.core.config import settings
 
 def make_email_client() -> EmailClient:
     """
-    EmailClient with bounded retries and network timeouts.
+    EmailClient that fails fast instead of blocking.
 
-    The SDK defaults are 10 retries (honouring Retry-After on throttling) and
-    300s connect/read timeouts, all inside begin_send() - so one throttled
-    send could block its caller for many minutes, long before the
-    poller.result() timeout below is even reached. That wedged the scheduler
-    jobs ("maximum number of running instances reached") and hung Class B
-    pre-questionnaire completion, which sends its email inline.
+    The SDK defaults are 10 retries and 300s connect/read timeouts, all inside
+    begin_send() - long before the poller.result() timeout below is reached.
+    Worse, when Azure throttles it replies with Retry-After and the SDK sleeps
+    for exactly that long with no upper bound, even with a single retry. With
+    many users queued, one throttled job sat asleep for minutes and every later
+    tick was skipped ("maximum number of running instances reached").
+
+    retry_total=0 means a throttled or failed send raises immediately. That's
+    safe because the scheduler already re-runs every job each interval - it is
+    the retry mechanism - so SDK-level retries only ever added blocking.
     """
     return EmailClient.from_connection_string(
         settings.AZURE_COMMUNICATION_CONNECTION_STRING,
-        retry_total=1,
+        retry_total=0,
         connection_timeout=10,
         read_timeout=20,
     )
