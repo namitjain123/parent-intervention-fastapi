@@ -22,10 +22,18 @@
 
 .comingSoonText {
   margin: 0;
-  font-size: 44px;
+  font-size: 32px;
   font-weight: 700;
   color: #0f172a;
   text-align: center;
+}
+
+.comingSoonBody {
+  margin: 12px 0 0;
+  font-size: 17px;
+  color: #475569;
+  text-align: center;
+  line-height: 1.6;
 }
 
 .loadingPage {

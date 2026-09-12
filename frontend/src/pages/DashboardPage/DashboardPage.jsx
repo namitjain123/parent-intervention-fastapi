@@ -295,25 +295,34 @@ export default function DashboardPage() {
           </div>
         ) : dashboard.delayed_survey_locked ? (
   <div className={styles.comingSoonWrap}>
-    <h1 className={styles.comingSoonText}>Coming soon....</h1>
+    <div>
+      <h1 className={styles.comingSoonText}>You're all set for now</h1>
+      <p className={styles.comingSoonBody}>
+        Thanks for completing the baseline survey — your responses have been recorded.
+      </p>
+      <p className={styles.comingSoonBody}>
+        Your episodes will open soon. There's nothing you need to do until then.
+      </p>
+      <p className={styles.comingSoonBody}>
+        We'll email you at <strong>{dashboard.email}</strong> as soon as the first episode is ready.
+      </p>
+    </div>
   </div>
 ) : dashboard.show_delayed_survey ? (
-  <div className="action-card waiting-card">
-    <div className="card-badge"></div>
-<h2 className="card-title">
-      Episodes will be available after completing this survey.
-    </h2>
-    <p className="card-text">Your next survey is now available</p>
+  <div className={styles.actionCard}>
+    <h2 className={styles.cardTitle}>Your Next Survey</h2>
 
+    <p className={styles.cardText}>
+      We greatly appreciate your time and valuable contribution to this
+      project. Your next short survey is now available. Once you complete
+      and submit the survey, you will be able to access the podcast
+      episodes. Thank you again for your continued support and for the
+      valuable time you are contributing to this project.
+    </p>
 
-
-    <button className="primary-button" onClick={openDelayedQuestionnaire}>
+    <button className={styles.primaryButton} onClick={openDelayedQuestionnaire}>
       Start Survey
     </button>
-
-    <div className="note-box">
-
-    </div>
   </div>
 ) : (
   <div>
