@@ -1,10 +1,10 @@
 """
 Backdate a single user's timestamps so the reminder jobs will pick them up.
 
-The reminder emails only fire for users who cross real time thresholds
-(7 days inactive, 21 days since signup), so there is no way to exercise them
-without either waiting weeks or moving a test user's clock back. This does the
-latter, for ONE explicitly named user at a time.
+The inactivity reminder only fires for users who cross a real time threshold
+(7 days inactive), so there is no way to exercise it without either waiting
+or moving a test user's clock back. This does the latter, for ONE explicitly
+named user at a time.
 
     WARNING: only ever run this against a TEST account. Backdating a real
     participant's created_at or last_activity_at corrupts study timing data.
@@ -15,17 +15,11 @@ Qualifying conditions (see app/services/reminder_service.py):
                        last_activity_at   <= now - 7 days
                        last_reminder_sent_at IS NULL or <= now - 7 days
 
-  progress reminder    post_questionnaire_completed = False
-                       created_at         <= now - 21 days
-                       midway_reminder_sent_at IS NULL
-
 Usage:
 
     python backdate_user.py --list                        # who is eligible right now
     python backdate_user.py --email you@example.com --status
-    python backdate_user.py --email you@example.com --inactive
-    python backdate_user.py --email you@example.com --old-account
-    python backdate_user.py --email you@example.com --both --apply
+    python backdate_user.py --email you@example.com --inactive --apply
 """
 
 import argparse
@@ -33,23 +27,15 @@ from datetime import datetime, timedelta, timezone
 
 from app.db.session import SessionLocal
 from app.models import User
-from app.services.reminder_service import (
-    get_users_needing_form_reminder,
-    get_users_needing_25day_progress_reminder,
-)
+from app.services.reminder_service import get_users_needing_form_reminder
 
 
 def show_eligible(db):
     inactivity = get_users_needing_form_reminder(db)
-    progress = get_users_needing_25day_progress_reminder(db)
 
     print(f"Eligible for INACTIVITY reminder ({len(inactivity)}):")
     for u in inactivity:
         print(f"  {u.email}  last_activity={u.last_activity_at}")
-
-    print(f"\nEligible for PROGRESS reminder ({len(progress)}):")
-    for u in progress:
-        print(f"  {u.email}  created_at={u.created_at}")
 
 
 def show_status(user: User):
@@ -66,8 +52,6 @@ def show_status(user: User):
     print(f"  post_questionnaire_completed : {user.post_questionnaire_completed}  (must be False)")
     print(f"  last_activity_at             : {ago(user.last_activity_at)}  (needs >= 7d)")
     print(f"  last_reminder_sent_at        : {ago(user.last_reminder_sent_at)}  (needs never or >= 7d)")
-    print(f"  created_at                   : {ago(user.created_at)}  (needs >= 21d)")
-    print(f"  midway_reminder_sent_at      : {ago(user.midway_reminder_sent_at)}  (must be never)")
 
 
 def main():
@@ -76,8 +60,6 @@ def main():
     parser.add_argument("--list", action="store_true", help="show who is currently eligible")
     parser.add_argument("--status", action="store_true", help="show one user's timestamps")
     parser.add_argument("--inactive", action="store_true", help="make eligible for the 7-day inactivity reminder")
-    parser.add_argument("--old-account", action="store_true", help="make eligible for the 21-day progress reminder")
-    parser.add_argument("--both", action="store_true", help="both of the above")
     parser.add_argument("--unlock-now", action="store_true", help="Class B: make the delayed survey unlock on the next job run")
     parser.add_argument("--reset-emails", action="store_true", help="clear the 'already sent' stamps so emails can fire again")
     parser.add_argument("--apply", action="store_true", help="actually write the changes")
@@ -101,27 +83,16 @@ def main():
             show_status(user)
             return
 
-        want_inactive = args.inactive or args.both
-        want_old = args.old_account or args.both
-
-        if not (want_inactive or want_old or args.unlock_now or args.reset_emails):
-            parser.error("pass --inactive, --old-account, --both, --unlock-now or --reset-emails")
+        if not (args.inactive or args.unlock_now or args.reset_emails):
+            parser.error("pass --inactive, --unlock-now or --reset-emails")
 
         now = datetime.now(timezone.utc)
         changes = {}
 
-        if want_inactive:
+        if args.inactive:
             # 8 days clears the 7-day threshold with a margin
             changes["last_activity_at"] = now - timedelta(days=8)
             changes["last_reminder_sent_at"] = None
-
-        if want_old:
-            # 22 days clears the 21-day threshold with a margin
-            changes["created_at"] = now - timedelta(days=22)
-            changes["midway_reminder_sent_at"] = None
-
-        if want_inactive or want_old:
-            # Both reminders require this to be False
             changes["post_questionnaire_completed"] = False
 
         if args.unlock_now:
@@ -135,7 +106,6 @@ def main():
             changes["lock_email_sent_at"] = None
             changes["unlock_email_sent_at"] = None
             changes["last_reminder_sent_at"] = None
-            changes["midway_reminder_sent_at"] = None
 
         print(f"\n{user.email} - planned changes:")
         for field, value in changes.items():

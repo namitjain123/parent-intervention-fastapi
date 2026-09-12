@@ -178,39 +178,3 @@ The Research Team
     return result
 
 
-def send_25day_progress_reminder(to_email: str, user_name: str):
-    client = make_email_client()
-
-    message = {
-        "senderAddress": settings.AZURE_EMAIL_SENDER,
-        "recipients": {
-            "to": [{"address": to_email}]
-        },
-        "content": {
-            "subject": "Reminder: Platform Will Close in One Week (21 days)",
-            "plainText": f"""
-Dear Parent/Caregiver,
-
-We noticed that the episodes have not yet been completed. Please complete them as soon as possible. The study platform will automatically close in one week, after which you will no longer be able to access the episodes.
-
-If you have any questions or have trouble accessing the platform, please contact the research team.
-
-Kind regards,
-
-The Research Team
-"""
-        }
-    }
-
-    poller = client.begin_send(message)
-    # poller.result(timeout=N) does not raise on timeout - it just stops
-    # waiting and returns whatever is available. Without checking done()
-    # explicitly, a hung Azure Communication Services call would block the
-    # scheduler job that called this indefinitely, with nothing ever
-    # raising to trigger the caller's own except-and-continue handling.
-    result = poller.result(timeout=30)
-
-    if not poller.done():
-        raise TimeoutError(f"Email send to {to_email} did not complete within 30s")
-
-    return result

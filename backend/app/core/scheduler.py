@@ -7,7 +7,6 @@ from app.core.config import settings
 from app.db.session import SessionLocal
 from app.services.email_service import (
     send_reminder_email,
-    send_25day_progress_reminder,
     send_pre_survey_reminder_email,
     send_post_survey_reminder_email,
 )
@@ -17,11 +16,9 @@ from app.services.episode_access import (
 )
 from app.services.reminder_service import (
     get_users_needing_form_reminder,
-    get_users_needing_25day_progress_reminder,
     get_users_needing_pre_survey_reminder,
     get_users_needing_post_survey_reminder,
     mark_reminder_sent,
-    mark_midway_reminder_sent,
     mark_pre_survey_reminder_sent,
     mark_post_survey_reminder_sent,
 )
@@ -86,23 +83,6 @@ def scheduled_send_inactivity_reminders():
         db.close()
 
 
-def scheduled_send_25day_reminders():
-    db = SessionLocal()
-    try:
-        users = get_users_needing_25day_progress_reminder(db)
-        print(f"[Reminder] Found {len(users)} users needing 25-day progress reminders")
-        for user in users:
-            try:
-                send_25day_progress_reminder(user.email, user.name)
-                mark_midway_reminder_sent(user, db)  # only once Azure accepts it
-                print(f"[Reminder] 25-day email sent to {user.email}")
-            except Exception as e:
-                db.rollback()
-                print(f"[Reminder] 25-day email failed for {user.email}: {e} - will retry next cycle")
-    finally:
-        db.close()
-
-
 def scheduled_send_pre_survey_reminders():
     db = SessionLocal()
     try:
@@ -157,13 +137,6 @@ def start_scheduler():
         "interval",
         minutes=settings.INACTIVITY_REMINDER_JOB_INTERVAL_MINUTES,
         id="inactivity_reminder_job",
-        replace_existing=True,
-    )
-    scheduler.add_job(
-        scheduled_send_25day_reminders,
-        "interval",
-        minutes=settings.PROGRESS_REMINDER_JOB_INTERVAL_MINUTES,
-        id="25day_progress_reminder_job",
         replace_existing=True,
     )
     scheduler.add_job(

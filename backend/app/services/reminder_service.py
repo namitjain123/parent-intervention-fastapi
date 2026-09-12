@@ -25,35 +25,9 @@ def get_users_needing_form_reminder(db):
     return users
 
 
-def get_users_needing_25day_progress_reminder(db):
-    """
-    Sent once only, PROGRESS_REMINDER_INTERVAL_MINUTES after the account was
-    created, gated purely by midway_reminder_sent_at being unset.
-    """
-    now = datetime.now(timezone.utc)
-    progress_cutoff = now - timedelta(minutes=settings.PROGRESS_REMINDER_INTERVAL_MINUTES)
-
-    users = db.query(User).filter(
-        User.post_questionnaire_completed == False,
-        User.created_at <= progress_cutoff,
-        User.midway_reminder_sent_at == None
-    ).all()
-
-    return users
-
-
 def mark_reminder_sent(user, db):
     user.last_reminder_sent_at = datetime.now(timezone.utc)
     user.reminder_count = (user.reminder_count or 0) + 1
-    db.commit()
-    db.refresh(user)
-
-
-def mark_midway_reminder_sent(user, db):
-    # midway_reminder_sent_at now doubles as "last progress reminder sent
-    # at" for the repeat check above, not just a one-time flag.
-    user.midway_reminder_sent_at = datetime.now(timezone.utc)
-    user.progress_reminder_count = (user.progress_reminder_count or 0) + 1
     db.commit()
     db.refresh(user)
 
