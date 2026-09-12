@@ -35,30 +35,18 @@ def send_reminder_email(to_email: str, user_name: str):
             "to": [{"address": to_email}]
         },
         "content": {
-            "subject": "Reminder: Please Continue on the Platform (4 days)",
-            "plainText": f"""
-Dear Parent/Caregiver, 
-
-Thank you for signing up for our platform. 
-
-We noticed that there has been no activity on your account for the past four days. Please continue when you have time. 
-
-If you have any questions or trouble accessing the study, please contact the research team: 
-
-Professor Jiesi Guo 
-Email: Jiesi.Guo@acu.edu.au 
-
-Dr Kim Rowston 
-Email: Kim.Rowston@acu.edu.au 
-
-Dr Chloe Gordon 
-Email: Chloe.Gordon@acu.edu.au 
- 
-
-Kind regards, 
-
-The Research Team
-"""
+            "subject": "Reminder: Please Continue on the Platform",
+            "html": """
+        <p>Dear Parent/Caregiver,</p>
+        <p>Thank you for signing up for our platform.</p>
+        <p>We noticed that there has been no activity on your account for the past four days. Please continue when you have time.</p>
+        <p>If you have any questions or trouble accessing the study, please contact the research team:</p>
+        <p>Professor Jiesi Guo<br>Email: <a href="mailto:Jiesi.Guo@acu.edu.au">Jiesi.Guo@acu.edu.au</a></p>
+        <p>Dr Kim Rowston<br>Email: <a href="mailto:Kim.Rowston@acu.edu.au">Kim.Rowston@acu.edu.au</a></p>
+        <p>Dr Chloe Gordon<br>Email: <a href="mailto:Chloe.Gordon@acu.edu.au">Chloe.Gordon@acu.edu.au</a></p>
+        <p>Kind regards,</p>
+        <p>The Research Team</p>
+        """
         }
     }
 
@@ -85,30 +73,19 @@ def send_pre_survey_reminder_email(to_email: str, user_name: str, reminder_numbe
             "to": [{"address": to_email}]
         },
         "content": {
-            "subject": f"Reminder: Reminder to Complete the Baseline Survey (2 Days After Registration) ",
-            "plainText": f"""
-Dear Parent/Caregiver, 
-
-Thank you for signing up for our platform. 
-
-We noticed that you registered two days ago but have not yet completed the baseline survey. Please complete the survey when you have time. 
-
-Once you complete the survey, you will be able to access the eight study episodes. 
-
-If you have any questions or trouble accessing the study, please contact the research team: 
-
-Professor Jiesi Guo 
-Email: Jiesi.Guo@acu.edu.au 
-
-Dr Kim Rowston 
-Email: Kim.Rowston@acu.edu.au 
-
-Dr Chloe Gordon 
-Email: Chloe.Gordon@acu.edu.au 
-
-Kind regards, 
-The Research Team
-"""
+            "subject": f"Reminder: Reminder to Complete the Baseline Survey",
+            "html": """
+        <p>Dear Parent/Caregiver,</p>
+        <p>Thank you for signing up for our platform.</p>
+        <p>We noticed that you registered two days ago but have not yet completed the baseline survey. Please complete the survey when you have time.</p>
+        <p>Once you complete the survey, you will be able to access the eight study episodes.</p>
+        <p>If you have any questions or trouble accessing the study, please contact the research team:</p>
+        <p>Professor Jiesi Guo<br>Email: <a href="mailto:Jiesi.Guo@acu.edu.au">Jiesi.Guo@acu.edu.au</a></p>
+        <p>Dr Kim Rowston<br>Email: <a href="mailto:Kim.Rowston@acu.edu.au">Kim.Rowston@acu.edu.au</a></p>
+        <p>Dr Chloe Gordon<br>Email: <a href="mailto:Chloe.Gordon@acu.edu.au">Chloe.Gordon@acu.edu.au</a></p>
+        <p>Kind regards,</p>
+        <p>The Research Team</p>
+        """
         }
     }
 
@@ -136,31 +113,19 @@ def send_post_survey_reminder_email(to_email: str, user_name: str, reminder_numb
         },
         "content": {
             "subject": "Reminder: Please Complete the Post-Test Survey",
-            "plainText": f"""
-Dear Parent/Caregiver,
-
-Well done on completing all eight episodes, and thank you for your time and participation.
-
-We noticed that it has been two days since you completed the episodes, but the post-test survey has not yet been completed. Please complete the survey when you have time.
-
-After completing the post-test survey, you will also be eligible to enter the prize draw.
-
-Thank you again for taking part in the study.
-
-If you have any questions or trouble accessing the study, please contact the research team:
-
-Professor Jiesi Guo
-Email: Jiesi.Guo@acu.edu.au
-
-Dr Kim Rowston
-Email: Kim.Rowston@acu.edu.au
-
-Dr Chloe Gordon
-Email: Chloe.Gordon@acu.edu.au
-
-Kind regards,
-The Research Team
-"""
+            "html": """
+        <p>Dear Parent/Caregiver,</p>
+        <p>Well done on completing all eight episodes, and thank you for your time and participation.</p>
+        <p>We noticed that it has been two days since you completed the episodes, but the post-test survey has not yet been completed. Please complete the survey when you have time.</p>
+        <p>After completing the post-test survey, you will also be eligible to enter the prize draw.</p>
+        <p>Thank you again for taking part in the study.</p>
+        <p>If you have any questions or trouble accessing the study, please contact the research team:</p>
+        <p>Professor Jiesi Guo<br>Email: <a href="mailto:Jiesi.Guo@acu.edu.au">Jiesi.Guo@acu.edu.au</a></p>
+        <p>Dr Kim Rowston<br>Email: <a href="mailto:Kim.Rowston@acu.edu.au">Kim.Rowston@acu.edu.au</a></p>
+        <p>Dr Chloe Gordon<br>Email: <a href="mailto:Chloe.Gordon@acu.edu.au">Chloe.Gordon@acu.edu.au</a></p>
+        <p>Kind regards,</p>
+        <p>The Research Team</p>
+        """
         }
     }
 
