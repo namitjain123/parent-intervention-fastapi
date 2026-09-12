@@ -27,3 +27,18 @@
   color: #b00020;
   line-height: 1.5;
 }
+
+.returnButton {
+  display: inline-block;
+  margin-top: 20px;
+  background: #356dcb;
+  color: #ffffff;
+  border: none;
+  border-radius: 16px;
+  padding: 15px 32px;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(53, 109, 203, 0.25);
+}

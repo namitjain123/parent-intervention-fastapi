@@ -54,7 +54,7 @@ export default function DelayedRedcapCompletePage() {
               Your delayed survey has been recorded. Please return to the platform
               to continue with your episodes.
             </p>
-            <a href="/" className={styles.message}>Return to the platform</a>
+            <a href="/" className={styles.returnButton}>Return to the platform</a>
           </>
         )}
 
