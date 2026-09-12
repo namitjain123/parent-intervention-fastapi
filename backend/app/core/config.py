@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     # Pre-questionnaire nudge: registered but never started the pre-questionnaire.
     # Sent every PRE_SURVEY_REMINDER_INTERVAL_MINUTES, up to PRE_SURVEY_REMINDER_MAX_COUNT
     # times. 2 days = 2880 minutes.
-    PRE_SURVEY_REMINDER_INTERVAL_MINUTES: int = 1
+    PRE_SURVEY_REMINDER_INTERVAL_MINUTES: int = 3
     PRE_SURVEY_REMINDER_MAX_COUNT: int = 5
 
     # Post-test nudge: all 8 episodes done but the post-questionnaire isn't.

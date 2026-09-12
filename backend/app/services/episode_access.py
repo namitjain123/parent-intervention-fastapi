@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
+from app.db.session import SessionLocal
 from app.models import User
 from app.services.email_service_classflow import (
     send_class_b_lock_email,
@@ -32,15 +33,65 @@ def ensure_episode_access(db_user: User, episode_number: int):
         raise HTTPException(status_code=403, detail="Episode is locked")
 
 
+def _claim_lock_email(db: Session, user_id: int) -> User | None:
+    """
+    Take ownership of sending this user's lock email, atomically.
+
+    Two senders can reach the same user at once: the background task fired
+    the moment they complete the pre-questionnaire, and the scheduler's
+    catch-up sweep. Stamping lock_email_sent_at in a single conditional
+    UPDATE means exactly one of them wins - the loser gets None back and does
+    nothing, so nobody is emailed twice.
+    """
+    claimed = (
+        db.query(User)
+        .filter(User.id == user_id, User.lock_email_sent_at.is_(None))
+        .update(
+            {User.lock_email_sent_at: datetime.now(timezone.utc)},
+            synchronize_session=False,
+        )
+    )
+    db.commit()
+
+    return db.get(User, user_id) if claimed else None
+
+
+def _send_claimed_lock_email(db: Session, user: User) -> None:
+    """Send a claimed lock email, releasing the claim again if it fails."""
+    try:
+        send_class_b_lock_email(user.email)
+        print(f"Lock email sent to {user.email}")
+    except Exception as e:
+        db.query(User).filter(User.id == user.id).update(
+            {User.lock_email_sent_at: None}, synchronize_session=False
+        )
+        db.commit()
+        print(f"Lock email failed for {user.email}: {e} - will retry next cycle")
+
+
+def send_lock_email_task(user_id: int) -> None:
+    """
+    Fired as a background task as soon as a Class B participant completes the
+    pre-questionnaire, so the "episodes will open soon" email goes out right
+    away instead of waiting for the scheduler's next sweep.
+
+    Runs after the response, so the participant's page never waits on Azure,
+    and opens its own session because the request's is already closed by then.
+    """
+    db = SessionLocal()
+    try:
+        user = _claim_lock_email(db, user_id)
+        if user:
+            _send_claimed_lock_email(db, user)
+    finally:
+        db.close()
+
+
 def send_pending_lock_emails(db: Session):
     """
-    Send the "episodes will open soon" email to Class B participants still
-    waiting for their unlock who haven't had it yet.
-
-    This used to be sent once, inline, when the pre-questionnaire completed,
-    and was marked as sent whether or not it went out - so an Azure throttle
-    or a restart mid-send lost it for good. Run from the scheduler instead and
-    only marked on success, a failed send is simply retried next cycle.
+    Catch-up sweep for lock emails that never went out - Azure throttling, or
+    a restart that killed the background task above. Marked as sent only once
+    Azure accepts it, so a failure is retried next cycle.
     """
     users = (
         db.query(User)
@@ -53,14 +104,9 @@ def send_pending_lock_emails(db: Session):
     )
 
     for user in users:
-        try:
-            send_class_b_lock_email(user.email)
-            user.lock_email_sent_at = datetime.now(timezone.utc)
-            db.commit()
-            print(f"Lock email sent to {user.email}")
-        except Exception as e:
-            db.rollback()
-            print(f"Lock email failed for {user.email}: {e} - will retry next cycle")
+        claimed = _claim_lock_email(db, user.id)
+        if claimed:
+            _send_claimed_lock_email(db, claimed)
 
 
 def process_delayed_survey_unlocks(db: Session):
