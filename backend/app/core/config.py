@@ -43,25 +43,28 @@ class Settings(BaseSettings):
     POST_SURVEY_REMINDER_JOB_INTERVAL_MINUTES: int = 2
 
     # Inactivity nudge: post-Q not done, inactive this long. Repeats at the
-    # same interval. 7 days = 10080 minutes.
+    # same interval, up to INACTIVITY_REMINDER_MAX_COUNT times.
+    # 7 days = 10080 minutes.
     INACTIVITY_REMINDER_INTERVAL_MINUTES: int = 5
+    INACTIVITY_REMINDER_MAX_COUNT: int = 5
 
-    # Progress nudge: post-Q not done, account this old. Sent once only.
-    # 21 days = 30240 minutes.
+    # Progress nudge: post-Q not done, account this old. Repeats at the same
+    # interval, up to PROGRESS_REMINDER_MAX_COUNT times. 21 days = 30240 minutes.
     PROGRESS_REMINDER_INTERVAL_MINUTES: int = 2
+    PROGRESS_REMINDER_MAX_COUNT: int = 5
 
     # Pre-questionnaire nudge: registered but never started the pre-questionnaire.
     # Sent every PRE_SURVEY_REMINDER_INTERVAL_MINUTES, up to PRE_SURVEY_REMINDER_MAX_COUNT
     # times. 2 days = 2880 minutes.
     PRE_SURVEY_REMINDER_INTERVAL_MINUTES: int = 1
-    PRE_SURVEY_REMINDER_MAX_COUNT: int = 1
+    PRE_SURVEY_REMINDER_MAX_COUNT: int = 5
 
     # Post-test nudge: all 8 episodes done but the post-questionnaire isn't.
     # Sent every POST_SURVEY_REMINDER_INTERVAL_MINUTES since completing the
     # last episode (or since the last reminder), up to
     # POST_SURVEY_REMINDER_MAX_COUNT times. 2 days = 2880 minutes.
-    POST_SURVEY_REMINDER_INTERVAL_MINUTES: int =1
-    POST_SURVEY_REMINDER_MAX_COUNT: int = 1
+    POST_SURVEY_REMINDER_INTERVAL_MINUTES: int = 1
+    POST_SURVEY_REMINDER_MAX_COUNT: int = 5
 
     @property
     def openid_config_url(self) -> str:

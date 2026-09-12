@@ -9,6 +9,12 @@ def get_users_needing_form_reminder(db):
 
     users = db.query(User).filter(
         User.post_questionnaire_completed == False,
+        # NULL-safe: see the pre/post-survey queries below for why this
+        # can't just be "reminder_count < MAX_COUNT".
+        (
+            (User.reminder_count == None) |
+            (User.reminder_count < settings.INACTIVITY_REMINDER_MAX_COUNT)
+        ),
         User.last_activity_at <= cutoff,
         (
             (User.last_reminder_sent_at == None) |
@@ -20,13 +26,25 @@ def get_users_needing_form_reminder(db):
 
 
 def get_users_needing_25day_progress_reminder(db):
+    """
+    Repeats every PROGRESS_REMINDER_INTERVAL_MINUTES since the account was
+    created (or since the last progress reminder), up to
+    PROGRESS_REMINDER_MAX_COUNT times. Previously a single IS-NULL-gated
+    send with no counter or repeat at all.
+    """
     now = datetime.now(timezone.utc)
     progress_cutoff = now - timedelta(minutes=settings.PROGRESS_REMINDER_INTERVAL_MINUTES)
 
     users = db.query(User).filter(
         User.post_questionnaire_completed == False,
-        User.created_at <= progress_cutoff,
-        User.midway_reminder_sent_at == None
+        (
+            (User.progress_reminder_count == None) |
+            (User.progress_reminder_count < settings.PROGRESS_REMINDER_MAX_COUNT)
+        ),
+        (
+            (User.midway_reminder_sent_at == None) &
+            (User.created_at <= progress_cutoff)
+        ) | (User.midway_reminder_sent_at <= progress_cutoff)
     ).all()
 
     return users
@@ -40,8 +58,10 @@ def mark_reminder_sent(user, db):
 
 
 def mark_midway_reminder_sent(user, db):
+    # midway_reminder_sent_at now doubles as "last progress reminder sent
+    # at" for the repeat check above, not just a one-time flag.
     user.midway_reminder_sent_at = datetime.now(timezone.utc)
-    user.reminder_count = (user.reminder_count or 0) + 1
+    user.progress_reminder_count = (user.progress_reminder_count or 0) + 1
     db.commit()
     db.refresh(user)
 

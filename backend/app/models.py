@@ -38,6 +38,7 @@ class User(Base):
     last_reminder_sent_at = Column(DateTime, nullable=True)
     reminder_count = Column(Integer, default=0)
     midway_reminder_sent_at = Column(DateTime, nullable=True)
+    progress_reminder_count = Column(Integer, default=0)
 
     # Pre-questionnaire nudge: registered but never started the pre-questionnaire
     last_pre_survey_reminder_sent_at = Column(DateTime, nullable=True)
