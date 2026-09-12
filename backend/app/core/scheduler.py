@@ -72,6 +72,11 @@ def scheduled_send_inactivity_reminders():
         users = get_users_needing_form_reminder(db)
         print(f"[Reminder] Found {len(users)} users needing inactivity reminders")
         for user in users:
+            db.refresh(user)
+            if user.post_questionnaire_completed:
+                print(f"[Reminder] Skipping {user.email} - post-questionnaire completed since this run started")
+                continue
+
             try:
                 send_reminder_email(user.email, user.name)
                 mark_reminder_sent(user, db)  # only once Azure accepts it
@@ -89,6 +94,14 @@ def scheduled_send_pre_survey_reminders():
         users = get_users_needing_pre_survey_reminder(db)
         print(f"[Reminder] Found {len(users)} users needing pre-survey reminders")
         for user in users:
+            # Re-check right before sending: a slow loop (throttling, many
+            # users) leaves a window where someone finishes the step after
+            # being picked up, and would be nagged about it anyway.
+            db.refresh(user)
+            if user.pre_questionnaire_completed:
+                print(f"[Reminder] Skipping {user.email} - pre-questionnaire completed since this run started")
+                continue
+
             reminder_number = (user.pre_survey_reminder_count or 0) + 1
             try:
                 send_pre_survey_reminder_email(user.email, user.name, reminder_number)
@@ -107,6 +120,11 @@ def scheduled_send_post_survey_reminders():
         users = get_users_needing_post_survey_reminder(db)
         print(f"[Reminder] Found {len(users)} users needing post-survey reminders")
         for user in users:
+            db.refresh(user)
+            if user.post_questionnaire_completed:
+                print(f"[Reminder] Skipping {user.email} - post-questionnaire completed since this run started")
+                continue
+
             reminder_number = (user.post_survey_reminder_count or 0) + 1
             try:
                 send_post_survey_reminder_email(user.email, user.name, reminder_number)
