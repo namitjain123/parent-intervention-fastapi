@@ -27,24 +27,16 @@ def get_users_needing_form_reminder(db):
 
 def get_users_needing_25day_progress_reminder(db):
     """
-    Repeats every PROGRESS_REMINDER_INTERVAL_MINUTES since the account was
-    created (or since the last progress reminder), up to
-    PROGRESS_REMINDER_MAX_COUNT times. Previously a single IS-NULL-gated
-    send with no counter or repeat at all.
+    Sent once only, PROGRESS_REMINDER_INTERVAL_MINUTES after the account was
+    created, gated purely by midway_reminder_sent_at being unset.
     """
     now = datetime.now(timezone.utc)
     progress_cutoff = now - timedelta(minutes=settings.PROGRESS_REMINDER_INTERVAL_MINUTES)
 
     users = db.query(User).filter(
         User.post_questionnaire_completed == False,
-        (
-            (User.progress_reminder_count == None) |
-            (User.progress_reminder_count < settings.PROGRESS_REMINDER_MAX_COUNT)
-        ),
-        (
-            (User.midway_reminder_sent_at == None) &
-            (User.created_at <= progress_cutoff)
-        ) | (User.midway_reminder_sent_at <= progress_cutoff)
+        User.created_at <= progress_cutoff,
+        User.midway_reminder_sent_at == None
     ).all()
 
     return users

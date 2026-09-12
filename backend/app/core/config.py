@@ -48,10 +48,9 @@ class Settings(BaseSettings):
     INACTIVITY_REMINDER_INTERVAL_MINUTES: int = 5
     INACTIVITY_REMINDER_MAX_COUNT: int = 5
 
-    # Progress nudge: post-Q not done, account this old. Repeats at the same
-    # interval, up to PROGRESS_REMINDER_MAX_COUNT times. 21 days = 30240 minutes.
+    # Progress nudge: post-Q not done, account this old. Sent once only.
+    # 21 days = 30240 minutes.
     PROGRESS_REMINDER_INTERVAL_MINUTES: int = 2
-    PROGRESS_REMINDER_MAX_COUNT: int = 5
 
     # Pre-questionnaire nudge: registered but never started the pre-questionnaire.
     # Sent every PRE_SURVEY_REMINDER_INTERVAL_MINUTES, up to PRE_SURVEY_REMINDER_MAX_COUNT
